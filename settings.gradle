@@ -15,3 +15,6 @@ pluginManagement {
 
 rootProject.name = 'gaco'
 include 'gaco-dynamic-entities'
+include 'gaco-ds'
+include 'gaco-collisions'
+include 'gaco-math'

@@ -1,0 +1,20 @@
+useKibuModules(project,
+        'kibu-schematic-api',
+        'kibu-schematic-fabric',
+)
+
+useGacoModules(project,
+        'gaco-collisions',
+        'gaco-math',
+)
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            pom {
+                name = 'kibu-collisions'
+                description = "API for detecting and handling collisions"
+            }
+        }
+    }
+}

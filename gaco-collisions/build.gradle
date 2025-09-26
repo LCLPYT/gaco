@@ -1,13 +1,6 @@
-useKibuModules(project,
-        'kibu-hook-api',
-        'kibu-hooks',
-        'kibu-scheduler-api',
-        'kibu-translation-api',
-)
+useKibuModules(project)
 
-useGacoModules(project,
-        'gaco-ds'
-)
+useGacoModules(project)
 
 publishing {
     publications {

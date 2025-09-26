@@ -1,0 +1,23 @@
+useKibuModules(project,
+        'kibu-schematic-api',
+        'kibu-schematic-fabric',
+)
+
+useGacoModules(project,
+)
+
+dependencies {
+    include(implementation("org.ejml:ejml-core:0.44.0"))
+    include(implementation("org.ejml:ejml-simple:0.44.0"))
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            pom {
+                name = 'kibu-math'
+                description = 'Math utilities for game development'
+            }
+        }
+    }
+}

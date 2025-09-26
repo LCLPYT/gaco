@@ -3,6 +3,7 @@ import work.lclpnet.build.task.GithubDeploymentTask
 plugins {
 	id 'fabric-loom' version "${loom_version}" apply false
 	id 'gradle-build-utils' version '1.7.0'
+    id "io.freefair.lombok" version "8.11"
 }
 
 static def substitutions(Project project) {
@@ -25,6 +26,7 @@ allprojects {
     apply plugin: 'java'
     apply plugin: 'maven-publish'
     apply plugin: 'fabric-loom'
+    apply plugin: 'io.freefair.lombok'
 
     repositories {
         maven {
@@ -40,6 +42,12 @@ allprojects {
         modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
         compileOnly 'org.jetbrains:annotations:24.1.0'
+
+        testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.1")
+        testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.8.1")
+        testImplementation("org.mockito:mockito-core:5.6.0")
+        testImplementation("org.junit.jupiter:junit-jupiter-params:5.8.1")
+        testImplementation("net.fabricmc:fabric-loader-junit:${project.loader_version}")
     }
 
     test {
@@ -240,4 +248,32 @@ static def getSubprojectVersion(Project project) {
     }
 
     return versionString + "+" + project.minecraft_version + suffix
+}
+
+def useKibuModules(Project project, String... modules) {
+    for (final def module in modules) {
+        def version = rootProject.getProperties()["${module}_version"]
+
+        if (!version) {
+            throw new IllegalStateException("Could not find version for kibu module $module")
+        }
+
+        project.dependencies {
+            modImplementation("work.lclpnet.mods.kibu:$module:$version")
+        }
+    }
+}
+
+def useGacoModules(Project project, String... modules) {
+    // for each subproject dependency, collect the 'namedElements' configuration
+    def deps = modules.iterator().collect {
+        project.dependencies.project(path: ":$it", configuration: 'namedElements')
+    }
+
+    // now add the actual dependency to the project
+    project.dependencies {
+        deps.each {
+            api it
+        }
+    }
 }
