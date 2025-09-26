@@ -47,8 +47,6 @@ allprojects {
         systemProperty("fabric.side", "server")
     }
 
-    configureSubstitutions(processResources, substitutions(it))
-
     java {
         // Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
         withSourcesJar()
@@ -85,6 +83,12 @@ subprojects {
         }
     }
 
+    base {
+        archivesName = project.name
+    }
+
+    configureSubstitutions(processResources, substitutions(it))
+
     publishMavenJavaPublicationToMavenRepository.onlyIf {
         return !checkProjectIsDeployed(project, props)
     }
@@ -120,6 +124,7 @@ loom {
     }
 }
 
+configureSubstitutions(processResources, substitutions(project))
 configureSubstitutions(processTestmodResources, substitutions(project))
 
 dependencies {
@@ -218,7 +223,7 @@ def getDeployUrl(Properties props) {
 }
 
 static def getSubprojectVersion(Project project) {
-    def version = project.getProperties()["${project.getName()}-version"]
+    def version = project.getProperties()["${project.getName()}_version"]
 
     if (!version) {
         throw new IllegalStateException("Could not find version for project ${project.getName()}")

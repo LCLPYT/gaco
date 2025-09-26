@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "id": "gaco-dynamic-entities",
+  "version": "${version}",
+  "name": "Gaco Dynamic Entities",
+  "description": "API for dynamic entities, that don't exist physically in the world.",
+  "authors": [
+    "LCLP"
+  ],
+  "contact": {
+    "homepage": "https://github.com/LCLPYT/gaco",
+    "sources": "https://github.com/LCLPYT/gaco"
+  },
+  "license": "MIT",
+  "icon": "assets/gaco-dynamic-entities/icon.png",
+  "environment": "*",
+  "entrypoints": {},
+  "mixins": [],
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "minecraft": "~${minecraft_version}",
+    "java": ">=${java_version}",
+    "fabric-api": "*"
+  },
+  "suggests": {},
+  "custom": {
+    "modmenu": {
+      "badges": ["library"],
+      "parent": "gaco"
+    }
+  }
+}
