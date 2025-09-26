@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "id": "gaco-testmod",
+  "version": "${version}",
+  "name": "Gaco Testmod",
+  "description": "[Test Mod] Game commons libraries for developing minigames for Minecraft: Java edition using FabricMC.",
+  "authors": [
+    "LCLP"
+  ],
+  "contact": {
+    "homepage": "https://github.com/LCLPYT/gaco",
+    "sources": "https://github.com/LCLPYT/gaco"
+  },
+  "license": "MIT",
+  "environment": "*",
+  "entrypoints": {},
+  "mixins": [],
+  "depends": {
+    "gaco": "*"
+  }
+}

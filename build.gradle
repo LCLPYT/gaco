@@ -5,7 +5,14 @@ plugins {
 	id 'gradle-build-utils' version '1.7.0'
 }
 
-def JAVA_VERSION = 21
+static def substitutions(Project project) {
+    return [
+            version          : project.version,
+            loader_version   : project.loader_version,
+            minecraft_version: project.minecraft_version,
+            java_version     : project.java_version
+    ]
+}
 
 def env = System.getenv()
 Properties props = buildUtils.loadProperties('publish.properties')  // will be empty, if the file is missing
@@ -40,34 +47,18 @@ allprojects {
         systemProperty("fabric.side", "server")
     }
 
-    processResources {
-        def variables = [
-                version: project.version,
-                loader_version: project.loader_version,
-                minecraft_version: project.minecraft_version,
-                java_version: JAVA_VERSION
-        ]
-
-        for (def entry in variables.entrySet()) {
-            inputs.property(entry.key, entry.value)
-        }
-
-        filesMatching("fabric.mod.json") {
-
-            expand variables
-        }
-    }
+    configureSubstitutions(processResources, substitutions(it))
 
     java {
         // Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
         withSourcesJar()
 
-        sourceCompatibility = JavaVersion.toVersion(JAVA_VERSION)
-        targetCompatibility = JavaVersion.toVersion(JAVA_VERSION)
+        sourceCompatibility = JavaVersion.toVersion(project.java_version)
+        targetCompatibility = JavaVersion.toVersion(project.java_version)
     }
 
     tasks.withType(JavaCompile).configureEach {
-        it.options.release.set(JAVA_VERSION)
+        it.options.release.set(Integer.valueOf(project.java_version as String) as int)
     }
 
     [jar, sourcesJar].each {
@@ -129,6 +120,8 @@ loom {
     }
 }
 
+configureSubstitutions(processTestmodResources, substitutions(project))
+
 dependencies {
     afterEvaluate {
         subprojects.each {
@@ -185,6 +178,16 @@ publishing {
 /************************************\
  * Utilities                         *
  \************************************/
+
+static def configureSubstitutions(ProcessResources task, Map<String, ?> substitutions) {
+    for (def entry in substitutions.entrySet()) {
+        task.inputs.property(entry.key, entry.value)
+    }
+
+    task.filesMatching("fabric.mod.json") {
+        expand substitutions
+    }
+}
 
 def checkProjectIsDeployed(Project project, Properties props) {
     def url = "${getDeployUrl(props)}/${project.group.toString().replace('.', '/')}/${project.archivesBaseName}/maven-metadata.xml"
