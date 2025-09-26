@@ -1,21 +1,119 @@
+import work.lclpnet.build.task.GithubDeploymentTask
+
 plugins {
-	id 'fabric-loom' version "${loom_version}"
-	id 'maven-publish'
+	id 'fabric-loom' version "${loom_version}" apply false
 	id 'gradle-build-utils' version '1.7.0'
 }
 
+def JAVA_VERSION = 21
+
+def env = System.getenv()
 Properties props = buildUtils.loadProperties('publish.properties')  // will be empty, if the file is missing
 
 version = "${project.mod_version}+${project.minecraft_version}"
-group = project.maven_group
+
+allprojects {
+    group = project.maven_group
+
+    apply plugin: 'java'
+    apply plugin: 'maven-publish'
+    apply plugin: 'fabric-loom'
+
+    repositories {
+        maven {
+            url "https://repo.lclpnet.work/repository/internal"
+        }
+    }
+
+    dependencies {
+        minecraft "com.mojang:minecraft:${project.minecraft_version}"
+        mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+        modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+
+        modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+
+        compileOnly 'org.jetbrains:annotations:24.1.0'
+    }
+
+    test {
+        useJUnitPlatform()
+        systemProperty("fabric.side", "server")
+    }
+
+    processResources {
+        def variables = [
+                version: project.version,
+                loader_version: project.loader_version,
+                minecraft_version: project.minecraft_version,
+                java_version: JAVA_VERSION
+        ]
+
+        for (def entry in variables.entrySet()) {
+            inputs.property(entry.key, entry.value)
+        }
+
+        filesMatching("fabric.mod.json") {
+
+            expand variables
+        }
+    }
+
+    java {
+        // Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
+        withSourcesJar()
+
+        sourceCompatibility = JavaVersion.toVersion(JAVA_VERSION)
+        targetCompatibility = JavaVersion.toVersion(JAVA_VERSION)
+    }
+
+    tasks.withType(JavaCompile).configureEach {
+        it.options.release.set(JAVA_VERSION)
+    }
+
+    [jar, sourcesJar].each {
+        it.from("LICENSE") {
+            rename { "${it}_${project.base.archivesName.get()}"}
+        }
+    }
+
+    publishing {
+        buildUtils.setupPublishRepository(repositories, props)
+    }
+}
+
+subprojects {
+    version = getSubprojectVersion(project)
+
+    publishing {
+        publications {
+            mavenJava(MavenPublication) {
+                artifactId = project.archivesBaseName
+
+                from components.java
+            }
+        }
+    }
+
+    publishMavenJavaPublicationToMavenRepository.onlyIf {
+        return !checkProjectIsDeployed(project, props)
+    }
+
+    afterEvaluate {
+        tasks.find { (it.name == "genSources") }?.setEnabled(false)
+        tasks.find { (it.name == "genSourcesWithCfr") }?.setEnabled(false)
+        tasks.find { (it.name == "genSourcesWithFernFlower") }?.setEnabled(false)
+        tasks.find { (it.name == "genSourcesWithVineFlowerCo") }?.setEnabled(false)
+    }
+}
 
 base {
     archivesName = project.archives_base_name
 }
 
-repositories {
-    maven {
-        url "https://repo.lclpnet.work/repository/internal"
+sourceSets {
+    testmod {
+        compileClasspath += main.compileClasspath + main.getOutput()
+        runtimeClasspath += main.runtimeClasspath + main.getOutput()
     }
 }
 
@@ -24,49 +122,44 @@ loom {
 
     runs {
         remove client
+
+        named('server') {
+            source 'testmod'
+        }
     }
 }
 
 dependencies {
-    minecraft "com.mojang:minecraft:${project.minecraft_version}"
-    mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
-    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
-
-    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
-
-    testImplementation "net.fabricmc:fabric-loader-junit:${project.loader_version}"
+    afterEvaluate {
+        subprojects.each {
+            api project(path: it.path, configuration: "namedElements")
+        }
+    }
 }
 
-test {
-    useJUnitPlatform()
-    systemProperty("fabric.side", "server")
+// add subprojects as nested jar to the main jar
+remapJar {
+    afterEvaluate {
+        subprojects.each {
+            nestedJars.from project(it.path).tasks.named("remapJar")
+        }
+    }
 }
 
+tasks.register("github", GithubDeploymentTask) {
+    dependsOn tasks.remapJar
 
-processResources {
-	inputs.property "version", project.version
+    config {
+        token = env.get("GITHUB_TOKEN")
+        repository = env.get("GITHUB_REPOSITORY")
+    }
 
-	filesMatching("fabric.mod.json") {
-		expand "version": project.version
-	}
-}
+    release {
+        title = "[$project.minecraft_version] $project.name $project.version"
+        tag = project.version
+    }
 
-tasks.withType(JavaCompile).configureEach {
-	it.options.release.set(21)
-}
-
-java {
-    // Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
-    withSourcesJar()
-
-    sourceCompatibility = JavaVersion.VERSION_21
-    targetCompatibility = JavaVersion.VERSION_21
-}
-
-jar {
-	from("LICENSE") {
-		rename { "${it}_${project.base.archivesName.get()}"}
-	}
+    assets.add(tasks.remapJar.archiveFile.get())
 }
 
 // configure the maven publication
@@ -87,4 +180,56 @@ publishing {
     // automatically use DEPLOY_URL, DEPLOY_USER and DEPLOY_PASSWORD environment variables
     // or mavenHost, mavenUser and mavenPassword from props
     buildUtils.setupPublishRepository(repositories, props)
+}
+
+/************************************\
+ * Utilities                         *
+ \************************************/
+
+def checkProjectIsDeployed(Project project, Properties props) {
+    def url = "${getDeployUrl(props)}/${project.group.toString().replace('.', '/')}/${project.archivesBaseName}/maven-metadata.xml"
+
+    String xml
+    try {
+        xml = new URL(url).text
+    } catch (Throwable ignored) {
+        return false
+    }
+
+    def meta = new groovy.xml.XmlSlurper().parseText(xml)
+    def versions = meta.versioning.versions.version*.text()
+
+    return versions.contains(project.version)
+}
+
+def getDeployUrl(Properties props) {
+    Map<String, String> env = System.getenv()
+
+    if (env.containsKey("DEPLOY_URL")) {
+        return env.get("DEPLOY_URL")
+    } else if (props.containsKey('mavenHost')) {
+        return props.getProperty('mavenHost')
+    } else {
+        return "file:///${rootProject.projectDir}/repo"
+    }
+}
+
+static def getSubprojectVersion(Project project) {
+    def version = project.getProperties()["${project.getName()}-version"]
+
+    if (!version) {
+        throw new IllegalStateException("Could not find version for project ${project.getName()}")
+    }
+
+    boolean local = System.getProperty("build.local") == "true"
+    def suffix = (local ? '+local' : '')
+
+    def versionString = version.toString()
+    def snapshotSuffix = "-SNAPSHOT"
+
+    if (versionString.endsWith(snapshotSuffix)) {
+        return versionString.substring(0, versionString.length() - snapshotSuffix.length()) + "+" + project.minecraft_version + suffix + snapshotSuffix
+    }
+
+    return versionString + "+" + project.minecraft_version + suffix
 }
