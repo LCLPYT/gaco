@@ -1,0 +1,22 @@
+ext {
+    kibuModules = [
+            'kibu-assets-api',
+    ]
+    gacoModules = [
+    ]
+}
+
+dependencies {
+    modImplementation "maven.modrinth:minecraft-sqlite-jdbc:$project.sqlite_version"
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            pom {
+                name = 'gaco-asset-repo'
+                description = 'Provides an API for interacting with asset repositories'
+            }
+        }
+    }
+}

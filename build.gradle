@@ -40,6 +40,18 @@ allprojects {
         maven {
             url "https://repo.lclpnet.work/repository/internal"
         }
+
+        exclusiveContent {
+            forRepository {
+                maven {
+                    name = "Modrinth"
+                    url = "https://api.modrinth.com/maven"
+                }
+            }
+            filter {
+                includeGroup "maven.modrinth"
+            }
+        }
     }
 
     dependencies {
@@ -178,6 +190,10 @@ sourceSets {
         compileClasspath += main.compileClasspath + main.getOutput()
         runtimeClasspath += main.runtimeClasspath + main.getOutput()
     }
+}
+
+subprojects {
+    rootProject.sourceSets.testmod.runtimeClasspath += it.sourceSets.main.runtimeClasspath
 }
 
 loom {

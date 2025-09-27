@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "id": "gaco-asset-repo",
+  "version": "${version}",
+  "name": "Gaco Asset Repositories",
+  "description": "Provides an API for interacting with asset repositories",
+  "authors": [
+    "LCLP"
+  ],
+  "contact": {
+    "homepage": "https://github.com/LCLPYT/gaco",
+    "sources": "https://github.com/LCLPYT/gaco"
+  },
+  "license": "MIT",
+  "icon": "assets/gaco-asset-repo/icon.png",
+  "environment": "*",
+  "entrypoints": {},
+  "mixins": [],
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "minecraft": "~${minecraft_version}",
+    "java": ">=${java_version}",
+    "fabric-api": "*",
+    "kibu-assets-api": "*"
+  },
+  "suggests": {},
+  "custom": {
+    "modmenu": {
+      "badges": ["library"],
+      "parent": "gaco"
+    }
+  }
+}
