@@ -14,7 +14,7 @@ publishing {
     publications {
         mavenJava(MavenPublication) {
             pom {
-                name = 'aco-collisions'
+                name = 'gaco-collisions'
                 description = 'API for detecting and handling collisions / movement'
             }
         }

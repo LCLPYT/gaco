@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "id": "gaco-dynamic-entities",
+  "id": "gaco-core",
   "version": "${version}",
-  "name": "Gaco Dynamic Entities",
-  "description": "API for dynamic entities, that don't exist physically in the world.",
+  "name": "Gaco Core",
+  "description": "Core API for game commons",
   "authors": [
     "LCLP"
   ],
@@ -12,7 +12,7 @@
     "sources": "https://github.com/LCLPYT/gaco"
   },
   "license": "MIT",
-  "icon": "assets/gaco-dynamic-entities/icon.png",
+  "icon": "assets/gaco-core/icon.png",
   "environment": "*",
   "entrypoints": {},
   "mixins": [],
@@ -20,12 +20,7 @@
     "fabricloader": ">=${loader_version}",
     "minecraft": "~${minecraft_version}",
     "java": ">=${java_version}",
-    "fabric-api": "*",
-    "kibu-hook-api": "*",
-    "kibu-hooks": "*",
-    "kibu-scheduler-api": "*",
-    "kibu-translation-api": "*",
-    "gaco-ds": "*"
+    "fabric-api": "*"
   },
   "suggests": {},
   "custom": {
