@@ -1,0 +1,17 @@
+ext {
+    kibuModules = [
+    ]
+    gacoModules = [
+    ]
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            pom {
+                name = 'gaco-core'
+                description = 'Core API for game commons'
+            }
+        }
+    }
+}
