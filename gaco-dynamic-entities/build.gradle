@@ -1,20 +1,21 @@
-useKibuModules(project,
-        'kibu-hook-api',
-        'kibu-hooks',
-        'kibu-scheduler-api',
-        'kibu-translation-api',
-)
-
-useGacoModules(project,
-        'gaco-ds'
-)
+ext {
+    kibuModules = [
+            'kibu-hook-api',
+            'kibu-hooks',
+            'kibu-scheduler-api',
+            'kibu-translation-api',
+    ]
+    gacoModules = [
+            'gaco-ds',
+    ]
+}
 
 publishing {
     publications {
         mavenJava(MavenPublication) {
             pom {
-                name = 'kibu-translation-api'
-                description = 'An API for server-sided translations.'
+                name = 'gaco-dynamic-entities'
+                description = "API for dynamic entities, that don't exist physically in the world."
             }
         }
     }

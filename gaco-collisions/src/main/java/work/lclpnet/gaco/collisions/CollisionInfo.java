@@ -1,6 +1,7 @@
 package work.lclpnet.gaco.collisions;
 
 import org.jetbrains.annotations.NotNull;
+import work.lclpnet.gaco.ds.Collider;
 
 import java.util.*;
 

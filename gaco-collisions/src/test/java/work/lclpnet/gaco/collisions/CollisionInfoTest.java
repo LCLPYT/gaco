@@ -1,6 +1,7 @@
 package work.lclpnet.gaco.collisions;
 
 import org.junit.jupiter.api.Test;
+import work.lclpnet.gaco.ds.Collider;
 
 import java.util.List;
 import java.util.Set;

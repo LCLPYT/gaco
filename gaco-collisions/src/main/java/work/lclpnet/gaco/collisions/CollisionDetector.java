@@ -2,6 +2,7 @@ package work.lclpnet.gaco.collisions;
 
 import net.minecraft.util.math.Position;
 import org.jetbrains.annotations.NotNull;
+import work.lclpnet.gaco.ds.Collider;
 
 import java.util.HashSet;
 import java.util.Set;

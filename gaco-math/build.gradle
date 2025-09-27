@@ -1,10 +1,10 @@
-useKibuModules(project,
-        'kibu-schematic-api',
-        'kibu-schematic-fabric',
-)
-
-useGacoModules(project,
-)
+ext {
+    kibuModules = [
+            'kibu-schematic-api',
+            'kibu-schematic-fabric',
+    ]
+    gacoModules = []
+}
 
 dependencies {
     include(implementation("org.ejml:ejml-core:0.44.0"))
@@ -15,7 +15,7 @@ publishing {
     publications {
         mavenJava(MavenPublication) {
             pom {
-                name = 'kibu-math'
+                name = 'gaco-math'
                 description = 'Math utilities for game development'
             }
         }

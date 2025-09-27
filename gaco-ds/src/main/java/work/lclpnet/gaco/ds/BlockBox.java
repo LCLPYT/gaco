@@ -6,9 +6,8 @@ import it.unimi.dsi.fastutil.Pair;
 import net.minecraft.util.math.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import work.lclpnet.gaco.collisions.Collider;
 import work.lclpnet.gaco.math.AffineIntMatrix;
-import work.lclpnet.kibu.structure.BlockStructure;
+import work.lclpnet.kibu.schematic.api.Cuboid;
 import work.lclpnet.kibu.util.math.Matrix3i;
 
 import java.util.Iterator;
@@ -315,7 +314,7 @@ public class BlockBox implements Pair<BlockPos, BlockPos>, Iterable<BlockPos>, C
         return new BlockBox(BlockPos.ofFloored(box.getMinPos()), BlockPos.ofFloored(box.getMaxPos()));
     }
 
-    public static BlockBox ofBounds(BlockStructure structure) {
+    public static BlockBox ofBounds(Cuboid structure) {
         return new BlockBox(0, 0, 0,
                 structure.getWidth() - 1, structure.getHeight() - 1, structure.getLength() - 1);
     }

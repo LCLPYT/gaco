@@ -18,7 +18,15 @@ static def substitutions(Project project) {
 def env = System.getenv()
 Properties props = buildUtils.loadProperties('publish.properties')  // will be empty, if the file is missing
 
-version = "${project.mod_version}+${project.minecraft_version}"
+boolean local = System.getProperty("build.local") == "true"
+def versionSuffix = (local ? '+local' : '')
+
+version = "${project.mod_version}+${project.minecraft_version}${versionSuffix}"
+
+ext {
+    projectKibuModules = new LinkedHashMap<String, List<String>>()
+    projectGacoModules = new LinkedHashMap<String, List<String>>()
+}
 
 allprojects {
     group = project.maven_group
@@ -107,6 +115,58 @@ subprojects {
         tasks.find { (it.name == "genSourcesWithFernFlower") }?.setEnabled(false)
         tasks.find { (it.name == "genSourcesWithVineFlowerCo") }?.setEnabled(false)
     }
+}
+
+subprojects {
+    apply from: 'build.gradle'
+
+    def kibuModules = ext.properties.get("kibuModules", []) as List<String>
+    def gacoModules = ext.properties.get("gacoModules", []) as List<String>
+
+    def projectKibuModules = rootProject.ext.properties.projectKibuModules as Map<String, List<String>>
+    def projectGacoModules = rootProject.ext.properties.projectGacoModules as Map<String, List<String>>
+
+    projectKibuModules.put(it.name, kibuModules)
+    projectGacoModules.put(it.name, gacoModules)
+
+    useKibuModules(it, kibuModules)
+}
+
+subprojects {
+    def projectKibuModules = rootProject.ext.properties.get("projectKibuModules", []) as Map<String, List<String>>
+    def projectGacoModules = rootProject.ext.properties.get("projectGacoModules", []) as Map<String, List<String>>
+
+    def transitiveKibuModules = new HashSet<String>()
+    def transitiveGacoModules = new HashSet<String>()
+    def processGacoModules = new ArrayList<>(projectGacoModules.get(it.name, []))
+
+    while (!processGacoModules.isEmpty()) {
+        def gacoModule = processGacoModules.removeFirst()
+
+        if (it.name == gacoModule) {
+            throw new IllegalStateException("Gaco module $gacoModule cannot depend on itself")
+        }
+
+        if (!transitiveGacoModules.add(gacoModule)) continue
+
+        def kibuModules = projectKibuModules.get(gacoModule, [])
+        transitiveKibuModules.addAll(kibuModules)
+
+        def gacoNext = projectGacoModules.get(gacoModule, [])
+
+        for (final def next in gacoNext) {
+            if (it.name == next) {
+                throw new IllegalStateException("Circular dependency detected for gaco module $it.name (via $gacoModule)")
+            }
+
+            if (transitiveGacoModules.contains(next)) continue
+
+            processGacoModules.add(next)
+        }
+    }
+
+    useKibuModules(it, transitiveKibuModules)
+    useGacoModules(it, transitiveGacoModules)
 }
 
 base {
@@ -250,7 +310,7 @@ static def getSubprojectVersion(Project project) {
     return versionString + "+" + project.minecraft_version + suffix
 }
 
-def useKibuModules(Project project, String... modules) {
+def useKibuModules(Project project, Iterable<String> modules) {
     for (final def module in modules) {
         def version = rootProject.getProperties()["${module}_version"]
 
@@ -264,16 +324,10 @@ def useKibuModules(Project project, String... modules) {
     }
 }
 
-def useGacoModules(Project project, String... modules) {
-    // for each subproject dependency, collect the 'namedElements' configuration
-    def deps = modules.iterator().collect {
-        project.dependencies.project(path: ":$it", configuration: 'namedElements')
-    }
-
-    // now add the actual dependency to the project
-    project.dependencies {
-        deps.each {
-            api it
+def useGacoModules(Project project, Iterable<String> modules) {
+    for (final def module in modules) {
+        project.dependencies {
+            api project.dependencies.project(path: ":$module", configuration: 'namedElements')
         }
     }
 }

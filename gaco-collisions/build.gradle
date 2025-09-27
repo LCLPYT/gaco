@@ -1,13 +1,21 @@
-useKibuModules(project)
-
-useGacoModules(project)
+ext {
+    kibuModules = [
+            'kibu-hook-api',
+            'kibu-hooks',
+            'kibu-scheduler-api',
+    ]
+    gacoModules = [
+            'gaco-math',
+            'gaco-ds',
+    ]
+}
 
 publishing {
     publications {
         mavenJava(MavenPublication) {
             pom {
-                name = 'kibu-translation-api'
-                description = 'An API for server-sided translations.'
+                name = 'aco-collisions'
+                description = 'API for detecting and handling collisions / movement'
             }
         }
     }

@@ -1,4 +1,4 @@
-package work.lclpnet.gaco.collisions;
+package work.lclpnet.gaco.ds;
 
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Position;
