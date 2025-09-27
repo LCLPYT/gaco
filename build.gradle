@@ -94,6 +94,8 @@ allprojects {
     }
 
     publishing {
+        // automatically use DEPLOY_URL, DEPLOY_USER and DEPLOY_PASSWORD environment variables
+        // or mavenHost, mavenUser and mavenPassword from props
         buildUtils.setupPublishRepository(repositories, props)
     }
 }
@@ -258,10 +260,6 @@ publishing {
             }
         }
     }
-
-    // automatically use DEPLOY_URL, DEPLOY_USER and DEPLOY_PASSWORD environment variables
-    // or mavenHost, mavenUser and mavenPassword from props
-    buildUtils.setupPublishRepository(repositories, props)
 }
 
 /************************************\
