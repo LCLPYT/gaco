@@ -1,5 +1,6 @@
 package work.lclpnet.gaco.math;
 
+import com.mojang.serialization.Codec;
 import net.minecraft.util.math.Vec3d;
 import org.ejml.data.SingularMatrixException;
 import org.ejml.simple.SimpleMatrix;
@@ -11,10 +12,18 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.IntStream;
 
 import static java.lang.Math.*;
 
 public class SplinePath {
+
+    public static final Codec<SplinePath> CODEC = Vec3d.CODEC.listOf().xmap(
+            SplinePath::new,
+            path -> IntStream.range(0, path.n)
+                    .mapToObj(i -> new Vec3d(path.x[i], path.y[i], path.z[i]))
+                    .toList()
+    );
 
     private final double[] x, y, z;
     private final double[] d2x, d2y, d2z;  // d^2 / dx^2 at keypoints
