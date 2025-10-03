@@ -66,6 +66,15 @@ public class AffineIntMatrix {
         return pos;
     }
 
+    public Vec3d transform(double x, double y, double z) {
+        // points have w=1 in homogeneous coordinates
+        return new Vec3d(
+                elements[0] * x + elements[1] * y + elements[2] * z + elements[3],
+                elements[4] * x + elements[5] * y + elements[6] * z + elements[7],
+                elements[8] * x + elements[9] * y + elements[10] * z + elements[11]
+        );
+    }
+
     public BlockPos transformVector(int x, int y, int z) {
         BlockPos.Mutable vec = new BlockPos.Mutable();
 
@@ -88,6 +97,10 @@ public class AffineIntMatrix {
     }
 
     public BlockPos transform(Vec3i pos) {
+        return transform(pos.getX(), pos.getY(), pos.getZ());
+    }
+
+    public Vec3d transform(Vec3d pos) {
         return transform(pos.getX(), pos.getY(), pos.getZ());
     }
 
