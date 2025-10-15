@@ -12,17 +12,22 @@ import java.util.function.Predicate;
 public class PlayerMovementObserver extends AbstractMovementObserver {
 
     public PlayerMovementObserver(CollisionDetector collisionDetector, Predicate<ServerPlayerEntity> predicate) {
-        super(collisionDetector, predicate);
+        super(collisionDetector, predicate, false, 0);
+    }
+
+    public PlayerMovementObserver(CollisionDetector collisionDetector, Predicate<ServerPlayerEntity> predicate,
+                                  boolean useHitboxes, double hitboxMargin) {
+        super(collisionDetector, predicate, useHitboxes, hitboxMargin);
     }
 
     public void init(HookRegistrar registrar, MinecraftServer server) {
         registrar.registerHook(PlayerMoveCallback.HOOK, (player, from, to) -> {
-            onMove(player, to);
+            updateMovement(player, to);
             return false;
         });
 
         for (ServerPlayerEntity player : PlayerLookup.all(server)) {
-            onMove(player, player.getPos());
+            updateMovement(player, player.getPos());
         }
     }
 }

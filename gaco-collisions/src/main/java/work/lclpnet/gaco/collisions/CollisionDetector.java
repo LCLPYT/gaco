@@ -1,5 +1,6 @@
 package work.lclpnet.gaco.collisions;
 
+import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Position;
 import org.jetbrains.annotations.NotNull;
 import work.lclpnet.gaco.ds.Collider;
@@ -22,11 +23,30 @@ public interface CollisionDetector {
      */
     void updateCollisions(Position pos, CollisionInfo info);
 
+    /**
+     * Finds all colliders that collide with a box.
+     * @param box The box to check collisions with.
+     * @param info The {@link CollisionInfo} object that collisions will be written to.
+     */
+    void updateCollisions(Box box, CollisionInfo info);
+
     @NotNull
     default Set<Collider> getCollisions(Position pos) {
         CollisionInfo info = new CollisionInfo(1);
         updateCollisions(pos, info);
 
+        return getColliders(info);
+    }
+
+    @NotNull
+    default Set<Collider> getCollisions(Box box) {
+        CollisionInfo info = new CollisionInfo(1);
+        updateCollisions(box, info);
+
+        return getColliders(info);
+    }
+
+    private @NotNull Set<Collider> getColliders(CollisionInfo info) {
         Set<Collider> collisions = new HashSet<>(info.count());
 
         for (Collider collider : info) {

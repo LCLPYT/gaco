@@ -1,7 +1,10 @@
 package work.lclpnet.gaco.collisions.movement;
 
+import net.minecraft.entity.EntityDimensions;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Position;
+import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.NotNull;
 import work.lclpnet.gaco.collisions.CollisionDetector;
 import work.lclpnet.gaco.collisions.CollisionInfo;
@@ -15,6 +18,8 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
+import static java.lang.Math.max;
+
 public class AbstractMovementObserver implements MovementObserver {
 
     private final CollisionDetector collisionDetector;
@@ -22,11 +27,16 @@ public class AbstractMovementObserver implements MovementObserver {
     private final Map<UUID, Entry> entries = new HashMap<>();
     private final Map<Collider, Consumer<ServerPlayerEntity>> regionEnter = new HashMap<>();
     private final Map<Collider, Consumer<ServerPlayerEntity>> regionLeave = new HashMap<>();
+    protected final boolean useHitboxes;
+    protected final double hitboxMargin;
     private BiConsumer<ServerPlayerEntity, Collider> onEnter = null, onLeave = null;
 
-    public AbstractMovementObserver(CollisionDetector collisionDetector, Predicate<ServerPlayerEntity> predicate) {
+    public AbstractMovementObserver(CollisionDetector collisionDetector, Predicate<ServerPlayerEntity> predicate,
+                                    boolean useHitboxes, double hitboxMargin) {
         this.collisionDetector = collisionDetector;
         this.predicate = predicate;
+        this.useHitboxes = useHitboxes;
+        this.hitboxMargin = max(0, hitboxMargin);
     }
 
     @Override
@@ -78,13 +88,37 @@ public class AbstractMovementObserver implements MovementObserver {
         onLeave = null;
     }
 
-    protected void onMove(ServerPlayerEntity player, Position pos) {
+    protected void updateMovement(ServerPlayerEntity player, Position pos) {
+        if (useHitboxes) {
+            EntityDimensions dimensions = player.getDimensions(player.getPose());
+            Box box = dimensions.getBoxAt(pos.getX(), pos.getY(), pos.getZ());
+            onMove(player, box.expand(hitboxMargin));
+        } else {
+            onMove(player, pos);
+        }
+    }
+
+    private void onMove(ServerPlayerEntity player, Position pos) {
         if (!predicate.test(player)) return;
 
         Entry entry = entries.computeIfAbsent(player.getUuid(), uuid -> new Entry());
 
         collisionDetector.updateCollisions(pos, entry.current);
 
+        processCollisions(player, entry);
+    }
+
+    private void onMove(ServerPlayerEntity player, Box box) {
+        if (!predicate.test(player)) return;
+
+        Entry entry = entries.computeIfAbsent(player.getUuid(), uuid -> new Entry());
+
+        collisionDetector.updateCollisions(box, entry.current);
+
+        processCollisions(player, entry);
+    }
+
+    private void processCollisions(ServerPlayerEntity player, Entry entry) {
         if (entry.last.equals(entry.current)) return;
 
         for (var left : entry.last.diff(entry.current)) {

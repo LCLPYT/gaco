@@ -12,16 +12,21 @@ import java.util.function.Predicate;
 public class TickMovementObserver extends AbstractMovementObserver {
 
     public TickMovementObserver(CollisionDetector collisionDetector, Predicate<ServerPlayerEntity> predicate) {
-        super(collisionDetector, predicate);
+        super(collisionDetector, predicate, false, 0);
+    }
+
+    public TickMovementObserver(CollisionDetector collisionDetector, Predicate<ServerPlayerEntity> predicate,
+                                boolean useHitboxes, double hitboxMargin) {
+        super(collisionDetector, predicate, useHitboxes, hitboxMargin);
     }
 
     public void init(TaskScheduler scheduler, HookRegistrar hooks, MinecraftServer server) {
         TickMovementDetector detector = new TickMovementDetector(() -> PlayerLookup.all(server));
-        detector.register(player -> onMove(player, player.getPos()));
+        detector.register(player -> updateMovement(player, player.getPos()));
         detector.init(scheduler, hooks);
 
         for (ServerPlayerEntity player : PlayerLookup.all(server)) {
-            onMove(player, player.getPos());
+            updateMovement(player, player.getPos());
         }
     }
 }
