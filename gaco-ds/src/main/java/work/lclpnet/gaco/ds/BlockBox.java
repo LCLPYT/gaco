@@ -61,6 +61,11 @@ public class BlockBox implements Pair<BlockPos, BlockPos>, Iterable<BlockPos>, C
     }
 
     @Override
+    public boolean collidesWith(BlockBox box) {
+        return intersects(box);
+    }
+
+    @Override
     public BlockPos min() {
         return min;
     }

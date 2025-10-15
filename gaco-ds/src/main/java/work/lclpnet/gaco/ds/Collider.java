@@ -7,6 +7,8 @@ public interface Collider {
 
     boolean collidesWith(double x, double y, double z);
 
+    boolean collidesWith(BlockBox box);
+
     BlockPos min();
 
     BlockPos max();

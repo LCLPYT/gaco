@@ -1,6 +1,7 @@
 package work.lclpnet.gaco.collisions;
 
 import net.minecraft.util.math.BlockPos;
+import work.lclpnet.gaco.ds.BlockBox;
 import work.lclpnet.gaco.ds.Collider;
 
 public class UnionCollider implements Collider {
@@ -36,6 +37,17 @@ public class UnionCollider implements Collider {
     public boolean collidesWith(double x, double y, double z) {
         for (Collider child : children) {
             if (child.collidesWith(x, y, z)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    @Override
+    public boolean collidesWith(BlockBox box) {
+        for (Collider child : children) {
+            if (child.collidesWith(box)) {
                 return true;
             }
         }
