@@ -1,13 +1,14 @@
 package work.lclpnet.gaco.ds;
 
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Position;
 
 public interface Collider {
 
     boolean collidesWith(double x, double y, double z);
 
-    boolean collidesWith(BlockBox box);
+    boolean collidesWith(Box box);
 
     BlockPos min();
 

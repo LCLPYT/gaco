@@ -61,7 +61,7 @@ public class BlockBox implements Pair<BlockPos, BlockPos>, Iterable<BlockPos>, C
     }
 
     @Override
-    public boolean collidesWith(BlockBox box) {
+    public boolean collidesWith(Box box) {
         return intersects(box);
     }
 
@@ -171,6 +171,13 @@ public class BlockBox implements Pair<BlockPos, BlockPos>, Iterable<BlockPos>, C
         return this.max.getX() >= other.min.getX() && other.max.getX() >= this.min.getX()
                 && this.max.getY() >= other.min.getY() && other.max.getY() >= this.min.getY()
                 && this.max.getZ() >= other.min.getZ() && other.max.getZ() >= this.min.getZ();
+    }
+
+    public boolean intersects(Box box) {
+        return box.intersects(
+                min.getX(), min.getY(), min.getZ(),
+                max.getX() + 1, max.getY() + 1, max.getZ() + 1
+        );
     }
 
     public BlockPos randomBlockPos(Random random) {
