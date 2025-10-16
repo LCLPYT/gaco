@@ -7,8 +7,9 @@ ext {
 }
 
 dependencies {
-    include(implementation("org.ejml:ejml-core:0.44.0"))
-    include(implementation("org.ejml:ejml-simple:0.44.0"))
+    include(implementation("org.ejml:ejml-core:${project.ejml_version}"))
+    include(implementation("org.ejml:ejml-simple:${project.ejml_version}"))
+    include(implementation("org.ejml:ejml-ddense:${project.ejml_version}"))
 }
 
 publishing {
