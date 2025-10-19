@@ -15,6 +15,8 @@ import java.util.Optional;
 import java.util.stream.IntStream;
 
 import static java.lang.Math.*;
+import static java.lang.Math.floor;
+import static java.lang.Math.min;
 
 public class SplinePath {
 
@@ -113,28 +115,24 @@ public class SplinePath {
      * Samples the first derivative using linear segment-parametrization given a progress parameter t.
      * This represents the tangent vector or direction at that point.
      * @param t The progress parameter ranging [0..1].
-     * @return The tangent vector at t.
+     * @return The tangent vector at t, not necessarily a unit vector.
      */
-    public Vec3d sampleDirectionLinear(double t) {
-        if (t <= 0.d) {
-            return samplePositionLinear(0.001).subtract(samplePositionLinear(0)).normalize();
-        }
+    public Vec3d sampleFirstDerivativeLinear(double t) {
+        if (t <= 0) t = 0.0;
+        if (t >= 1) t = 1.0;
 
-        if (t >= 1.d) {
-            return samplePositionLinear(1).subtract(samplePositionLinear(0.999)).normalize();
-        }
+        double tt = t * (n - 1);
 
-        t *= n - 1;
+        int i = min(n - 2, (int) floor(tt));
 
-        int i = min(n - 2, (int) floor(t));
+        double a = (i + 1) - tt;
+        double b = tt - i;
 
-        double a = (i + 1) - t;
-        double b = t - i;
+        double dxs = -x[i] + x[i + 1] + (-(3 * a * a - 1) * d2x[i] + (3 * b * b - 1) * d2x[i + 1]) / 6.0;
+        double dys = -y[i] + y[i + 1] + (-(3 * a * a - 1) * d2y[i] + (3 * b * b - 1) * d2y[i + 1]) / 6.0;
+        double dzs = -z[i] + z[i + 1] + (-(3 * a * a - 1) * d2z[i] + (3 * b * b - 1) * d2z[i + 1]) / 6.0;
 
-        double dxs = -x[i] + x[i + 1] + (-(3 * a * a - 1) * d2x[i] + (3 * b * b - 1) * d2x[i + 1]) / 6.d;
-        double dys = -y[i] + y[i + 1] + (-(3 * a * a - 1) * d2y[i] + (3 * b * b - 1) * d2y[i + 1]) / 6.d;
-        double dzs = -z[i] + z[i + 1] + (-(3 * a * a - 1) * d2z[i] + (3 * b * b - 1) * d2z[i + 1]) / 6.d;
-
+        // derivative w.r.t global t, multiply by (n−1)
         return new Vec3d(dxs * (n - 1), dys * (n - 1), dzs * (n - 1));
     }
 
@@ -142,9 +140,9 @@ public class SplinePath {
      * Samples the second derivative using linear segment-parametrization given a progress parameter t.
      * This represents the change of direction or curvature at that point.
      * @param t The progress parameter ranging [0..1].
-     * @return The curvature vector at t.
+     * @return The curvature vector at t, not necessarily a unit vector.
      */
-    public @NotNull Vec3d sampleCurvatureLinear(double t) {
+    public @NotNull Vec3d sampleSecondDerivativeLinear(double t) {
         double t_tau = t * (n - 1);
 
         int i = min(n - 2, (int) floor(t_tau));
@@ -175,7 +173,7 @@ public class SplinePath {
      * @return The tangent vector at s.
      */
     public Vec3d sampleDirection(double s) {
-        return sampleDirectionLinear(getLinearProgress(s));
+        return sampleFirstDerivativeLinear(getLinearProgress(s)).normalize();
     }
 
     /**
@@ -185,7 +183,7 @@ public class SplinePath {
      * @return The curvature vector at s.
      */
     public Vec3d sampleCurvature(double s) {
-        return sampleCurvatureLinear(getLinearProgress(s));
+        return sampleSecondDerivativeLinear(getLinearProgress(s));
     }
 
     /**
@@ -217,7 +215,7 @@ public class SplinePath {
 
         for (int iter = 0; iter < MAX_ITERATIONS; iter++) {
             Vec3d pos = samplePositionLinear(t);
-            Vec3d d1 = sampleDirectionLinear(t);  // first derivative
+            Vec3d d1 = sampleFirstDerivativeLinear(t);  // first derivative
 
             Vec3d V = pos.subtract(queryPos);
 
@@ -227,7 +225,7 @@ public class SplinePath {
             if (abs(ft) < EPSILON) break;
 
             // Calculate f'(t)
-            Vec3d d2 = sampleCurvatureLinear(t);  // second derivative
+            Vec3d d2 = sampleSecondDerivativeLinear(t);  // second derivative
             double d1t = d1.dotProduct(d1) + V.dotProduct(d2);
 
             if (abs(d1t) < 1e-10) break;

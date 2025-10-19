@@ -1,11 +1,17 @@
 package work.lclpnet.gaco.math;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.mojang.datafixers.util.Pair;
+import com.mojang.serialization.JsonOps;
 import net.minecraft.util.math.Vec3d;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
 import java.util.List;
@@ -16,6 +22,7 @@ import static work.lclpnet.gaco.math.SplinePath.findArcLengthSection;
 class SplinePathTest {
 
     private static final double EPSILON = 1e-6;
+    private static final Logger logger = LoggerFactory.getLogger(SplinePathTest.class);
 
     private SplinePath straightPath;
     private SplinePath curvedPath;
@@ -93,28 +100,28 @@ class SplinePathTest {
 
     @Test
     @DisplayName("sampleDirectionLinear should be constant for a straight path")
-    void sampleDirectionLinear_isConstantForStraightPath() {
+    void sampleFirstDerivativeLinear_isConstantForStraightPath() {
         Vec3d expectedDirection = new Vec3d(20, 0, 0); // (10-0)*2, (20-10)*2
-        assertVectorEquals(expectedDirection, straightPath.sampleDirectionLinear(0.25));
-        assertVectorEquals(expectedDirection, straightPath.sampleDirectionLinear(0.5));
-        assertVectorEquals(expectedDirection, straightPath.sampleDirectionLinear(0.75));
+        assertVectorEquals(expectedDirection, straightPath.sampleFirstDerivativeLinear(0.25));
+        assertVectorEquals(expectedDirection, straightPath.sampleFirstDerivativeLinear(0.5));
+        assertVectorEquals(expectedDirection, straightPath.sampleFirstDerivativeLinear(0.75));
     }
 
     @Test
     @DisplayName("sampleDirectionLinear should handle boundaries")
-    void sampleDirectionLinear_handlesBoundaries() {
-        assertNotNull(straightPath.sampleDirectionLinear(0.0));
-        assertNotNull(straightPath.sampleDirectionLinear(1.0));
-        assertTrue(straightPath.sampleDirectionLinear(0.0).dotProduct(new Vec3d(1,0,0)) > 0);
-        assertTrue(straightPath.sampleDirectionLinear(1.0).dotProduct(new Vec3d(1,0,0)) > 0);
+    void sampleFirstDerivativeLinear_handlesBoundaries() {
+        assertNotNull(straightPath.sampleFirstDerivativeLinear(0.0));
+        assertNotNull(straightPath.sampleFirstDerivativeLinear(1.0));
+        assertTrue(straightPath.sampleFirstDerivativeLinear(0.0).dotProduct(new Vec3d(1,0,0)) > 0);
+        assertTrue(straightPath.sampleFirstDerivativeLinear(1.0).dotProduct(new Vec3d(1,0,0)) > 0);
     }
 
     @Test
     @DisplayName("sampleCurvatureLinear should be zero for a straight path")
-    void sampleCurvatureLinear_isZeroForStraightPath() {
-        assertVectorEquals(new Vec3d(0, 0, 0), straightPath.sampleCurvatureLinear(0.0));
-        assertVectorEquals(new Vec3d(0, 0, 0), straightPath.sampleCurvatureLinear(0.5));
-        assertVectorEquals(new Vec3d(0, 0, 0), straightPath.sampleCurvatureLinear(1.0));
+    void sampleSecondDerivativeLinear_isZeroForStraightPath() {
+        assertVectorEquals(new Vec3d(0, 0, 0), straightPath.sampleSecondDerivativeLinear(0.0));
+        assertVectorEquals(new Vec3d(0, 0, 0), straightPath.sampleSecondDerivativeLinear(0.5));
+        assertVectorEquals(new Vec3d(0, 0, 0), straightPath.sampleSecondDerivativeLinear(1.0));
     }
 
     @Test
@@ -204,5 +211,42 @@ class SplinePathTest {
         assertEquals(expected.getX(), actual.getX(), EPSILON);
         assertEquals(expected.getY(), actual.getY(), EPSILON);
         assertEquals(expected.getZ(), actual.getZ(), EPSILON);
+    }
+
+    @Test
+    void getLinearProgress_closeToStart_refinementWorks() {
+        var json = new Gson().fromJson("""
+                [
+                        [2.862500011920929, 64.0, 0.525104285429158],
+                        [21.30807830987182, 64.0, 0.8100902895445458],
+                        [26.38299919662967, 64.0, 6.742668223692805],
+                        [20.58800393941121, 64.0, 11.654621180307483],
+                        [2.42490719892729, 64.0, 11.559314753032305],
+                        [-7.622902230195006, 64.0, 19.161305835822073],
+                        [-15.943090657090806, 64.0, 25.28677784749734],
+                        [-24.95331600887882, 64.0, 19.665954687889784],
+                        [-29.04549949142559, 64.0, 11.031239358749549],
+                        [-38.09320252419119, 64.0, 10.2947321347738],
+                        [-44.93673532468377, 64.0, 7.358275543071303],
+                        [-33.037781328603245, 64.0, 0.27816089988028253],
+                        [-28.288216638166727, 64.0, -7.3212209917609075],
+                        [-23.115713866977508, 64.0, -27.590364129618],
+                        [-15.300000011920929, 64.0, -32.69999998807907],
+                        [-10.47913290020666, 64.0, -24.41417283755979],
+                        [-10.457574674336943, 64.0, -8.124040251070861],
+                        [-8.181050815450543, 64.0, -2.1569848998658925]
+                      ]
+                """, JsonArray.class);
+
+        var path = SplinePath.CODEC.decode(JsonOps.INSTANCE, json)
+                .resultOrPartial(err -> logger.error("Failed to decode spline path from json: {}", err))
+                .map(Pair::getFirst)
+                .orElseThrow();
+
+        var queryPos = new Vec3d(2.9702233002807463, 64.0, 0.43919395937908695);
+
+        double linear = path.getLinearProgress(queryPos);
+
+        assertEquals(0, linear, 1e-3);
     }
 }
