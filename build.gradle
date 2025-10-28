@@ -1,5 +1,7 @@
 import work.lclpnet.build.task.GithubDeploymentTask
 
+import java.util.stream.Collectors
+
 plugins {
 	id 'fabric-loom' version "${loom_version}" apply false
 	id 'gradle-build-utils' version '1.7.0'
@@ -106,7 +108,7 @@ subprojects {
     publishing {
         publications {
             create("mavenJava", MavenPublication) {
-                artifactId = project.base.archivesName
+                artifactId = project.base.archivesName.get()
 
                 from components.java
             }
@@ -194,13 +196,24 @@ sourceSets {
     }
 }
 
-subprojects { subproj ->
-    rootProject.afterEvaluate { root ->
-        def testmod = root.extensions.getByName("sourceSets").getByName("testmod")
+def kibuModules = ext.projectKibuModules.values().stream()
+        .flatMap { it.stream() }
+        .collect(Collectors.toSet())
 
-        testmod.runtimeClasspath += subproj.sourceSets.main.output
-        testmod.compileClasspath += subproj.sourceSets.main.output
+for (final def module in kibuModules) {
+    def version = rootProject.getProperties()["${module}_version"]
+
+    if (!version) {
+        throw new IllegalStateException("Could not find version for kibu module $module")
     }
+
+    project.dependencies {
+        modImplementation("work.lclpnet.mods.kibu:$module:$version")
+    }
+}
+
+dependencies {
+    modImplementation("work.lclpnet.mods.kibu:kibu-physics:$project.kibu_physics_version")
 }
 
 loom {
@@ -282,7 +295,7 @@ static def configureSubstitutions(ProcessResources task, Map<String, ?> substitu
 }
 
 def checkProjectIsDeployed(Project project, Properties props) {
-    def url = "${getDeployUrl(props)}/${project.group.toString().replace('.', '/')}/${project.base.archivesName}/maven-metadata.xml"
+    def url = "${getDeployUrl(props)}/${project.group.toString().replace('.', '/')}/${project.base.archivesName.get()}/maven-metadata.xml"
 
     String xml
     try {
