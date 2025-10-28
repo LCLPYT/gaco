@@ -14,7 +14,7 @@ dependencies {
 
 publishing {
     publications {
-        mavenJava(MavenPublication) {
+        named("mavenJava", MavenPublication) {
             pom {
                 name = 'gaco-math'
                 description = 'Math utilities for game development'

@@ -12,7 +12,7 @@ ext {
 
 publishing {
     publications {
-        mavenJava(MavenPublication) {
+        named("mavenJava", MavenPublication) {
             pom {
                 name = 'gaco-collisions'
                 description = 'API for detecting and handling collisions / movement'

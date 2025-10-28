@@ -105,8 +105,8 @@ subprojects {
 
     publishing {
         publications {
-            mavenJava(MavenPublication) {
-                artifactId = project.archivesBaseName
+            create("mavenJava", MavenPublication) {
+                artifactId = project.base.archivesName
 
                 from components.java
             }
@@ -194,8 +194,13 @@ sourceSets {
     }
 }
 
-subprojects {
-    rootProject.sourceSets.testmod.runtimeClasspath += it.sourceSets.main.runtimeClasspath
+subprojects { subproj ->
+    rootProject.afterEvaluate { root ->
+        def testmod = root.extensions.getByName("sourceSets").getByName("testmod")
+
+        testmod.runtimeClasspath += subproj.sourceSets.main.output
+        testmod.compileClasspath += subproj.sourceSets.main.output
+    }
 }
 
 loom {
@@ -249,7 +254,7 @@ tasks.register("github", GithubDeploymentTask) {
 // configure the maven publication
 publishing {
     publications {
-        mavenJava(MavenPublication) {
+        create("mavenJava", MavenPublication) {
             artifactId = project.base.archivesName.get()
 
             from components.java
@@ -277,7 +282,7 @@ static def configureSubstitutions(ProcessResources task, Map<String, ?> substitu
 }
 
 def checkProjectIsDeployed(Project project, Properties props) {
-    def url = "${getDeployUrl(props)}/${project.group.toString().replace('.', '/')}/${project.archivesBaseName}/maven-metadata.xml"
+    def url = "${getDeployUrl(props)}/${project.group.toString().replace('.', '/')}/${project.base.archivesName}/maven-metadata.xml"
 
     String xml
     try {

@@ -10,7 +10,7 @@ ext {
 
 publishing {
     publications {
-        mavenJava(MavenPublication) {
+        named("mavenJava", MavenPublication) {
             pom {
                 name = 'gaco-scene'
                 description = "Scene graph implementation for managing 3d object hierarchies."

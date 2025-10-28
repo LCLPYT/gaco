@@ -7,7 +7,7 @@ ext {
 
 publishing {
     publications {
-        mavenJava(MavenPublication) {
+        named("mavenJava", MavenPublication) {
             pom {
                 name = 'gaco-ds'
                 description = "Data structures for game development"

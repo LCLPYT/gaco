@@ -12,7 +12,7 @@ ext {
 
 publishing {
     publications {
-        mavenJava(MavenPublication) {
+        named("mavenJava", MavenPublication) {
             pom {
                 name = 'gaco-dynamic-entities'
                 description = "API for dynamic entities, that don't exist physically in the world."
