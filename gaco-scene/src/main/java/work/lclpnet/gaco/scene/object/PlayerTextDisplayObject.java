@@ -25,7 +25,7 @@ public class PlayerTextDisplayObject extends TextDisplayObject implements Dynami
         super(scene, text);
 
         UUID uuid = player.getUuid();
-        PlayerManager manager = player.getWorld().getServer().getPlayerManager();
+        PlayerManager manager = player.getEntityWorld().getServer().getPlayerManager();
 
         this.playerRef = () -> manager.getPlayer(uuid);
     }

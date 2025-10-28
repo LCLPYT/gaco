@@ -16,7 +16,7 @@ public class EntityRefPhysicsElement implements PhysicsElement<EntityRef<?>> {
 
     public EntityRefPhysicsElement(EntityRef<?> ref) {
         this.ref = ref;
-        rigidBody = new EntityRefRigidBody(this, ref.require().getWorld());
+        rigidBody = new EntityRefRigidBody(this, ref.require().getEntityWorld());
     }
 
     @Override

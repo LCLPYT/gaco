@@ -22,7 +22,7 @@ public class PlayerSpecificDynamicEntity<T extends Entity> implements DynamicEnt
 
     @Override
     public Vec3d getPosition() {
-        return entity.getPos();
+        return entity.getEntityPos();
     }
 
     @Override

@@ -110,7 +110,7 @@ public class EntityCollisionManager {
             EntityDimensions dimensions = entity.getDimensions(pose);
 
             EntityRefRigidBody rigidBody = element.getRigidBody();
-            rigidBody.setPhysicsLocation(toBullet(entity.getPos().add(0, dimensions.height() * 0.5, 0)));
+            rigidBody.setPhysicsLocation(toBullet(entity.getEntityPos().add(0, dimensions.height() * 0.5, 0)));
             rigidBody.activate();
         }
     }

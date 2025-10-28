@@ -22,11 +22,11 @@ public class TickMovementObserver extends AbstractMovementObserver {
 
     public void init(TaskScheduler scheduler, HookRegistrar hooks, MinecraftServer server) {
         TickMovementDetector detector = new TickMovementDetector(() -> PlayerLookup.all(server));
-        detector.register(player -> updateMovement(player, player.getPos()));
+        detector.register(player -> updateMovement(player, player.getEntityPos()));
         detector.init(scheduler, hooks);
 
         for (ServerPlayerEntity player : PlayerLookup.all(server)) {
-            updateMovement(player, player.getPos());
+            updateMovement(player, player.getEntityPos());
         }
     }
 }

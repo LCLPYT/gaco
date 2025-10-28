@@ -27,7 +27,7 @@ public class PlayerMovementObserver extends AbstractMovementObserver {
         });
 
         for (ServerPlayerEntity player : PlayerLookup.all(server)) {
-            updateMovement(player, player.getPos());
+            updateMovement(player, player.getEntityPos());
         }
     }
 }

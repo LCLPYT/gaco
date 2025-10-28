@@ -1,6 +1,8 @@
 package work.lclpnet.gaco.dynamic_entities;
 
 import net.minecraft.entity.Entity;
+import net.minecraft.network.listener.ClientPlayPacketListener;
+import net.minecraft.network.packet.Packet;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.dedicated.MinecraftDedicatedServer;
 import net.minecraft.server.network.EntityTrackerEntry;
@@ -16,6 +18,7 @@ import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.kibu.translate.hook.LanguageChangedCallback;
 
 import java.util.*;
+import java.util.function.Predicate;
 
 /**
  * Manages {@link DynamicEntity} tracking for online players, so that they are only visible when nearby, just like real entities.
@@ -35,7 +38,7 @@ public class DynamicEntityManager {
         MinecraftServer server = world.getServer();
 
         if (server instanceof MinecraftDedicatedServer dedicatedServer) {
-            serverViewDistance = dedicatedServer.getProperties().viewDistance;
+            serverViewDistance = dedicatedServer.getProperties().viewDistance.get();
         } else {
             serverViewDistance = 10;
         }
@@ -217,7 +220,7 @@ public class DynamicEntityManager {
         }
 
         private void removeEntityForPlayer(ServerPlayerEntity player, Entity entity) {
-            if (!player.isDisconnected() && player.getWorld() == entity.getWorld()) {
+            if (!player.isDisconnected() && player.getEntityWorld() == entity.getEntityWorld()) {
                 EntityTrackerEntry trackerEntry = trackerEntries.get(entity);
 
                 if (trackerEntry != null) {
@@ -263,19 +266,32 @@ public class DynamicEntityManager {
                 var type = e.getType();
 
                 // use internal Minecraft class that is normally used for syncing the entity
-                return new EntityTrackerEntry(world, e, type.getTrackTickInterval(), type.alwaysUpdateVelocity(), packet -> {
-                    for (ServerPlayNetworkHandler tracker : listeners) {
-                        tracker.sendPacket(packet);
+                var sender = new EntityTrackerEntry.TrackerPacketSender() {
+                    @Override
+                    public void sendToListeners(Packet<? super ClientPlayPacketListener> packet) {
+                        for (ServerPlayNetworkHandler tracker : listeners) {
+                            tracker.sendPacket(packet);
+                        }
                     }
-                }, (packet, except) -> {
-                    for (ServerPlayNetworkHandler tracker : listeners) {
-                        ServerPlayerEntity p = tracker.getPlayer();
 
-                        if (p != null && except.contains(p.getUuid())) continue;
-
-                        tracker.sendPacket(packet);
+                    @Override
+                    public void sendToSelfAndListeners(Packet<? super ClientPlayPacketListener> packet) {
+                        sendToListeners(packet);
                     }
-                });
+
+                    @Override
+                    public void sendToListenersIf(Packet<? super ClientPlayPacketListener> packet, Predicate<ServerPlayerEntity> predicate) {
+                        for (ServerPlayNetworkHandler tracker : listeners) {
+                            ServerPlayerEntity p = tracker.getPlayer();
+
+                            if (p != null && predicate.test(p)) {
+                                tracker.sendPacket(packet);
+                            }
+                        }
+                    }
+                };
+
+                return new EntityTrackerEntry(world, e, type.getTrackTickInterval(), type.alwaysUpdateVelocity(), sender);
             });
         }
     }

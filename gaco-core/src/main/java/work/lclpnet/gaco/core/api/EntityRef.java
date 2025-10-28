@@ -10,7 +10,7 @@ public record EntityRef<T extends Entity>(UUID uuid, World world, Class<T> type)
 
     @SuppressWarnings("unchecked")
     public EntityRef(T entity) {
-        this(entity.getUuid(), entity.getWorld(), (Class<T>) entity.getClass());
+        this(entity.getUuid(), entity.getEntityWorld(), (Class<T>) entity.getClass());
     }
 
     @SuppressWarnings("unchecked")
