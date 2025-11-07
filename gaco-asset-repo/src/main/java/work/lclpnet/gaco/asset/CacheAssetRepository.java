@@ -62,6 +62,7 @@ public class CacheAssetRepository implements AssetRepository {
         }
 
         if (finalPath == null) {
+            // context lost, have to fetch again...
             return upstream.getStream(path, options);
         }
 
@@ -78,16 +79,15 @@ public class CacheAssetRepository implements AssetRepository {
      */
     @Override
     public Iterable<AssetUriResource> getUris(AssetPath path, AssetRequestOptions options) {
-        if (!options.preferUncached()) {
-            return getCachedUris(path, options);
+        if (options.preferUncached()) {
+            var fallbackCachedPath = cache.getCacheInfo(path)
+                    .map(AssetCache.CacheInfo::path)
+                    .orElse(null);
+
+            return getFreshUris(path, options, fallbackCachedPath);
         }
 
-        var fallbackCachedPath = cache.getCacheInfo(path)
-                .map(AssetCache.CacheInfo::path)
-                .orElse(null);
-
-        return getFreshUris(path, options, fallbackCachedPath);
-
+        return getCachedUris(path, options);
     }
 
     private Iterable<AssetUriResource> getCachedUris(AssetPath path, AssetRequestOptions options) {
@@ -114,19 +114,13 @@ public class CacheAssetRepository implements AssetRepository {
             return wrap(freshCachedPath, false);
         }
 
-        if (uris.iterator().hasNext()) {
-            logger.debug("Caching uris for path '{}' didn't work, returning uris nonetheless...", path);
-            return uris;
-        }
-
         if (fallbackPath != null) {
             logger.debug("Falling back to older cached uri of '{}'", path);
 
             return wrap(fallbackPath, true);
         }
 
-        return Collections::emptyIterator;
-
+        return uris;
     }
 
     private @Nullable Path cacheFirstValid(AssetPath path, Iterable<AssetUriResource> uris) {
