@@ -12,6 +12,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -136,7 +137,8 @@ class CacheAssetRepositoryTest {
 
         AssetPath path = AssetPath.of("cached.txt");
         Path cachedPath = Path.of("/tmp/cached.txt");
-        when(cache.getCached(path)).thenReturn(Optional.of(cachedPath));
+        when(cache.getCacheInfo(path))
+                .thenReturn(Optional.of(new AssetCache.CacheInfo(cachedPath, true)));
 
         var uris = repo.getUris(path, AssetRequestOptions.DEFAULT);
         var it = uris.iterator();
@@ -145,6 +147,30 @@ class CacheAssetRepositoryTest {
         assertEquals(cachedPath.toUri(), it.next().resource());
         assertFalse(it.hasNext());
         verify(upstream, never()).getUris(any(), any());
+    }
+
+    @Test
+    void fallbackToOlderCachedUriIfPresent() {
+        AssetCache cache = mock(AssetCache.class);
+        AssetRepository upstream = mock(AssetRepository.class);
+        Logger logger = mock(Logger.class);
+        CacheAssetRepository repo = new CacheAssetRepository(cache, upstream, 3600, logger);
+
+        AssetPath path = AssetPath.of("cached.txt");
+        Path cachedPath = Path.of("/tmp/cached.txt");
+        when(cache.getCacheInfo(path))
+                .thenReturn(Optional.of(new AssetCache.CacheInfo(cachedPath, false)));
+
+        when(upstream.getUris(any(), any()))
+                .thenReturn(Collections::emptyIterator);
+
+        var uris = repo.getUris(path, AssetRequestOptions.DEFAULT);
+        var it = uris.iterator();
+
+        assertTrue(it.hasNext());
+        assertEquals(cachedPath.toUri(), it.next().resource());
+        assertFalse(it.hasNext());
+        verify(upstream, atLeastOnce()).getUris(any(), any());
     }
 
     @Test

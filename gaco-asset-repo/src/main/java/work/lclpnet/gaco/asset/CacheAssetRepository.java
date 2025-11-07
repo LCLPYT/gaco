@@ -1,6 +1,7 @@
 package work.lclpnet.gaco.asset;
 
 import com.google.common.collect.Iterators;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import work.lclpnet.gaco.asset.cache.AssetCache;
@@ -77,47 +78,55 @@ public class CacheAssetRepository implements AssetRepository {
      */
     @Override
     public Iterable<AssetUriResource> getUris(AssetPath path, AssetRequestOptions options) {
-        Path cachedPath;
-
-        if (options.preferUncached()) {
-            logger.debug("Reading from cache is disabled for resource '{}', fetching asset uris from upstream {} ...", path, upstream);
-
-            var freshUris = upstream.getUris(path, options);
-
-            cachedPath = cacheFirstValid(path, freshUris);
-
-            if (cachedPath == null) {
-                // ask cache if no fresh asset could be cached
-                cachedPath = cache.getCached(path).orElse(null);
-
-                if (cachedPath != null) {
-                    logger.debug("Fallback to cached uri for cached asset from '{}' (uncached was requested)", cachedPath);
-                    return wrap(cachedPath, true);
-                }
-
-                return freshUris;
-            }
-        } else {
-            // cache enabled
-            cachedPath = cache.getCached(path).orElse(null);
-
-            if (cachedPath != null) {
-                logger.debug("Using uri for cached asset from '{}'", cachedPath);
-                return wrap(cachedPath, true);
-            }
-
-            logger.debug("Cache miss for asset uri '{}', fetching from upstream {} ...", path, upstream);
-
-            cachedPath = cacheFirstValid(path, upstream.getUris(path, options));
-
-            if (cachedPath == null) {
-                return upstream.getUris(path, options);
-            }
+        if (!options.preferUncached()) {
+            return getCachedUris(path, options);
         }
 
-        logger.debug("Asset '{}' has been cached to {} from uri request", path, cachedPath);
+        var fallbackCachedPath = cache.getCacheInfo(path)
+                .map(AssetCache.CacheInfo::path)
+                .orElse(null);
 
-        return wrap(cachedPath, false);
+        return getFreshUris(path, options, fallbackCachedPath);
+
+    }
+
+    private Iterable<AssetUriResource> getCachedUris(AssetPath path, AssetRequestOptions options) {
+        var cachedInfo = cache.getCacheInfo(path).orElse(null);
+        Path cachedPath = cachedInfo != null ? cachedInfo.path() : null;
+
+        if (cachedPath != null && cachedInfo.valid()) {
+            logger.debug("Using uri for cached asset from '{}'", cachedPath);
+            return wrap(cachedPath, true);
+        }
+
+        logger.debug("Cache miss for asset uri '{}', fetching from upstream {} ...", path, upstream);
+
+        return getFreshUris(path, options, cachedPath);
+    }
+
+    private @NotNull Iterable<AssetUriResource> getFreshUris(AssetPath path, AssetRequestOptions options, @Nullable Path fallbackPath) {
+        Iterable<AssetUriResource> uris = upstream.getUris(path, options);
+        Path freshCachedPath = cacheFirstValid(path, uris);
+
+        if (freshCachedPath != null) {
+            logger.debug("Asset '{}' has been cached to {} from uri request", path, freshCachedPath);
+
+            return wrap(freshCachedPath, false);
+        }
+
+        if (uris.iterator().hasNext()) {
+            logger.debug("Caching uris for path '{}' didn't work, returning uris nonetheless...", path);
+            return uris;
+        }
+
+        if (fallbackPath != null) {
+            logger.debug("Falling back to older cached uri of '{}'", path);
+
+            return wrap(fallbackPath, true);
+        }
+
+        return Collections::emptyIterator;
+
     }
 
     private @Nullable Path cacheFirstValid(AssetPath path, Iterable<AssetUriResource> uris) {
