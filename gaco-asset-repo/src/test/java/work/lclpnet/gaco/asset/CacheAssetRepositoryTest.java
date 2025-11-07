@@ -97,7 +97,10 @@ class CacheAssetRepositoryTest {
         when(upstream.getUris(eq(path), any()))
                 .thenReturn(() -> Iterators.singletonIterator(new AssetUriResource(URI.create(path.toString()), false)));
 
-        repo.getUris(path, AssetRequestOptions.DEFAULT.withDisableCacheRead(true));
+        when(cache.cache(any(AssetPath.class), any(URI.class), anyInt()))
+                .thenReturn(Optional.of(path.toPath()));  // not important, but must be non-null
+
+        repo.getUris(path, AssetRequestOptions.DEFAULT.withPreferUncached(true));
 
         verify(cache, never()).getCached(any());
         verify(cache, times(1)).cache(eq(path), (URI) any(), eq(3600));

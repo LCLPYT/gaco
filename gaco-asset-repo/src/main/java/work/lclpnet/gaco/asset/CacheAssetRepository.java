@@ -27,7 +27,7 @@ public class CacheAssetRepository implements AssetRepository {
 
     @Override
     public AssetStreamResource getStream(AssetPath path, AssetRequestOptions options) throws IOException {
-        if (options.disableCacheRead()) {
+        if (options.preferUncached()) {
             logger.debug("Cache is disable for resource '{}', fetching from upstream {} ...", path, upstream);
             return upstream.getStream(path, options);
         }
@@ -79,7 +79,7 @@ public class CacheAssetRepository implements AssetRepository {
     public Iterable<AssetUriResource> getUris(AssetPath path, AssetRequestOptions options) {
         Path cachedPath;
 
-        if (options.disableCacheRead()) {
+        if (options.preferUncached()) {
             logger.debug("Reading from cache is disabled for resource '{}', fetching asset uris from upstream {} ...", path, upstream);
 
             var freshUris = upstream.getUris(path, options);
@@ -87,6 +87,14 @@ public class CacheAssetRepository implements AssetRepository {
             cachedPath = cacheFirstValid(path, freshUris);
 
             if (cachedPath == null) {
+                // ask cache if no fresh asset could be cached
+                cachedPath = cache.getCached(path).orElse(null);
+
+                if (cachedPath != null) {
+                    logger.debug("Fallback to cached uri for cached asset from '{}' (uncached was requested)", cachedPath);
+                    return wrap(cachedPath, true);
+                }
+
                 return freshUris;
             }
         } else {

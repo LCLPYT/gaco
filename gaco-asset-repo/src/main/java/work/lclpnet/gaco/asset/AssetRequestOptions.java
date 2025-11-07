@@ -1,10 +1,10 @@
 package work.lclpnet.gaco.asset;
 
-public record AssetRequestOptions(boolean disableCacheRead) {
+public record AssetRequestOptions(boolean preferUncached) {
 
     public static final AssetRequestOptions DEFAULT = new AssetRequestOptions(false);
 
-    public AssetRequestOptions withDisableCacheRead(boolean disableCacheRead) {
-        return new AssetRequestOptions(disableCacheRead);
+    public AssetRequestOptions withPreferUncached(boolean preferUncached) {
+        return new AssetRequestOptions(preferUncached);
     }
 }
