@@ -32,30 +32,39 @@ public class CacheAssetRepository implements AssetRepository {
             return upstream.getStream(path, options);
         }
 
-        Path cachedPath = cache.getCached(path).orElse(null);
+        var cachedInfo = cache.getCacheInfo(path).orElse(null);
+        var cachedPath = cachedInfo != null ? cachedInfo.path() : null;
 
-        if (cachedPath != null) {
+        if (cachedPath != null && cachedInfo.valid()) {
             logger.debug("Using cached asset from '{}'", cachedPath);
             return new AssetStreamResource(Files.newInputStream(cachedPath), true);
         }
 
         logger.debug("Cache miss for asset '{}', fetching from upstream {} ...", path, upstream);
 
+        var finalPath = cachedPath;
+
         try (var in = upstream.getStream(path, options)) {
             try {
-                cachedPath = cache.cache(path, in.resource(), ttlSeconds);
+                finalPath = cache.cache(path, in.resource(), ttlSeconds);
+                logger.debug("Asset '{}' has been cached to {}", path, cachedPath);
             } catch (IOException e) {
                 logger.error("Failed to cache asset '{}', refetching uncached...", path, e);
             }
+        } catch (IOException e) {
+            logger.debug("Failed to retrieve streams from upstream for '{}', trying to use old cached version instead...", path, e);
+
+            if (cachedPath != null) {
+                logger.debug("Found older version of the asset in the cache");
+                finalPath = cachedPath;
+            }
         }
 
-        if (cachedPath == null) {
+        if (finalPath == null) {
             return upstream.getStream(path, options);
         }
 
-        logger.debug("Asset '{}' has been cached to {}", path, cachedPath);
-
-        return new AssetStreamResource(Files.newInputStream(cachedPath), false);
+        return new AssetStreamResource(Files.newInputStream(finalPath), false);
     }
 
     /**

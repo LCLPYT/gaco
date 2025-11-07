@@ -32,13 +32,36 @@ class CacheAssetRepositoryTest {
         Path tempFile = Files.createTempFile("cached", ".txt");
         Files.writeString(tempFile, "cachedData");
 
-        when(cache.getCached(path)).thenReturn(Optional.of(tempFile));
+        when(cache.getCacheInfo(path))
+                .thenReturn(Optional.of(new AssetCache.CacheInfo(tempFile, true)));
 
         try (var res = repo.getStream(path)) {
             assertEquals("cachedData", new String(res.resource().readAllBytes()));
         }
 
         verify(upstream, never()).getStream(any(), any());
+    }
+
+    @Test
+    void usesInvalidCachedIfUpstreamUnavailable() throws IOException {
+        AssetCache cache = mock(AssetCache.class);
+        AssetRepository upstream = mock(AssetRepository.class);
+        CacheAssetRepository repo = new CacheAssetRepository(cache, upstream, 3600, logger);
+
+        AssetPath path = AssetPath.of("cached.txt");
+        Path tempFile = Files.createTempFile("cached", ".txt");
+        Files.writeString(tempFile, "cachedData");
+
+        when(cache.getCacheInfo(path))
+                .thenReturn(Optional.of(new AssetCache.CacheInfo(tempFile, false)));
+
+        when(upstream.getStream(any(), any())).thenThrow(IOException.class);
+
+        try (var res = repo.getStream(path)) {
+            assertEquals("cachedData", new String(res.resource().readAllBytes()));
+        }
+
+        verify(upstream, atLeastOnce()).getStream(any(), any());
     }
 
     @Test

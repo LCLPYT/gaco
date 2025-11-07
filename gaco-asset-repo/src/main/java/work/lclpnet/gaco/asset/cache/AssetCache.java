@@ -29,16 +29,19 @@ public class AssetCache implements AutoCloseable {
         this.logger = logger;
     }
 
-    public Optional<Path> getCached(AssetPath path) {
+    public Optional<CacheInfo> getCacheInfo(AssetPath path) {
         if (path.isEmpty()) {
             return Optional.empty();
         }
 
-        if (index.isEntryInvalid(path.toString())) {
-            return Optional.empty();
-        }
+        boolean valid = !index.isEntryInvalid(path.toString());
+        Path cachedPath = root.resolve(path.toPath());
 
-        return Optional.of(root.resolve(path.toPath()));
+        return Optional.of(new CacheInfo(cachedPath, valid));
+    }
+
+    public Optional<Path> getCached(AssetPath path) {
+        return getCacheInfo(path).filter(CacheInfo::valid).map(CacheInfo::path);
     }
 
     public Path cache(AssetPath path, InputStream in, int ttlSeconds) throws IOException {
@@ -124,4 +127,6 @@ public class AssetCache implements AutoCloseable {
 
         return new AssetCache(index, root, logger);
     }
+
+    public record CacheInfo(Path path, boolean valid) {}
 }
