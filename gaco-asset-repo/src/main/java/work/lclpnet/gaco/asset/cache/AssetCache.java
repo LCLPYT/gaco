@@ -34,8 +34,13 @@ public class AssetCache implements AutoCloseable {
             return Optional.empty();
         }
 
-        boolean valid = !index.isEntryInvalid(path.toString());
         Path cachedPath = root.resolve(path.toPath());
+
+        if (!Files.exists(cachedPath)) {
+            return Optional.empty();
+        }
+
+        boolean valid = !index.isEntryInvalid(path.toString());
 
         return Optional.of(new CacheInfo(cachedPath, valid));
     }
