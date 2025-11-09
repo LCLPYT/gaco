@@ -20,11 +20,15 @@ class AssetCacheTest {
     private static final Logger logger = LoggerFactory.getLogger(AssetCacheTest.class);
 
     @Test
-    void getCachedReturnsPathWhenValid() {
+    void getCachedReturnsPathWhenValid() throws IOException {
         CacheIndex index = mock(CacheIndex.class);
-        Path root = Path.of("root");
+        Path root = Files.createTempDirectory("gaco_asset_cache");
         AssetCache cache = new AssetCache(index, root, logger);
         AssetPath path = AssetPath.of("a", "b");
+
+        Path realPath = root.resolve(path.toPath());
+        Files.createDirectories(realPath.getParent());
+        Files.writeString(realPath, "test");
 
         when(index.isEntryInvalid(path.toString())).thenReturn(false);
         Optional<Path> result = cache.getCached(path);
