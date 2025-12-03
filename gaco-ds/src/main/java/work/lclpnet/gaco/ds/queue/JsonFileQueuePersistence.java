@@ -103,7 +103,7 @@ public class JsonFileQueuePersistence<T> implements QueuePersistence<T> {
 
         var json = new Gson().fromJson(content, JsonElement.class);
 
-        return Optional.of(json);
+        return Optional.ofNullable(json);
     }
 
     public static <T> JsonFileQueuePersistence<T> create(String configId, Identifier id, Codec<T> elementCodec, Logger logger) {
