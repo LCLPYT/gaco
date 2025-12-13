@@ -1,7 +1,7 @@
 package work.lclpnet.gaco.ds;
 
 import com.google.common.collect.Iterators;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
@@ -12,11 +12,11 @@ import java.util.function.Function;
 public class QuadTree<T> {
 
     private final int nodeCapacity;
-    private final Function<T, Vec3d> posProvider;
+    private final Function<T, Vec3> posProvider;
     private final Map<T, Entry> entryMap = new HashMap<>();
     final @VisibleForTesting Node root;
 
-    public QuadTree(double x, double z, double width, double length, int nodeCapacity, Function<T, Vec3d> posProvider) {
+    public QuadTree(double x, double z, double width, double length, int nodeCapacity, Function<T, Vec3> posProvider) {
         if (nodeCapacity < 1) throw new IllegalArgumentException("Node capacity must be at least one");
         if (width < 0) throw new IllegalArgumentException("Width must be positive");
         if (length < 0) throw new IllegalArgumentException("Length must be positive");
@@ -33,7 +33,7 @@ public class QuadTree<T> {
             return false;
         }
 
-        Vec3d pos = posProvider.apply(element);
+        Vec3 pos = posProvider.apply(element);
 
         if (root.outOfBounds(pos)) {
             // can't insert out-of-bounds
@@ -99,8 +99,8 @@ public class QuadTree<T> {
         if (entry == null) return;
 
         // check if the element is still in the same node
-        Vec3d oldPos = entry.pos;
-        Vec3d newPos = posProvider.apply(element);
+        Vec3 oldPos = entry.pos;
+        Vec3 newPos = posProvider.apply(element);
 
         // search for the containing node
         Node oldNode = root;
@@ -166,7 +166,7 @@ public class QuadTree<T> {
             return !divided && (entries == null || entries.size() < nodeCapacity);
         }
 
-        boolean outOfBounds(Vec3d position) {
+        boolean outOfBounds(Vec3 position) {
             return position.x < x || position.x >= x + width ||
                    position.z < z || position.z >= z + length;
         }
@@ -177,7 +177,7 @@ public class QuadTree<T> {
          * @param pos The position.
          * @return The child node containing that position.
          */
-        Node childAt(Vec3d pos) {
+        Node childAt(Vec3 pos) {
             double halfWidth = width * 0.5;
             double halfHeight = length * 0.5;
 
@@ -382,9 +382,9 @@ public class QuadTree<T> {
 
     class Entry {
         final T element;
-        Vec3d pos;
+        Vec3 pos;
 
-        Entry(T element, Vec3d pos) {
+        Entry(T element, Vec3 pos) {
             this.element = element;
             this.pos = pos;
         }

@@ -1,6 +1,6 @@
 package work.lclpnet.gaco.collisions;
 
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
 import org.junit.jupiter.api.Test;
 import work.lclpnet.gaco.ds.BlockBox;
 

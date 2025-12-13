@@ -1,6 +1,6 @@
 package work.lclpnet.gaco.ds;
 
-import net.minecraft.util.math.Direction;
+import net.minecraft.core.Direction;
 import work.lclpnet.kibu.mc.KibuBlockPos;
 import work.lclpnet.kibu.structure.BlockStructure;
 
@@ -19,7 +19,7 @@ public record StructureMask(boolean[][][] mask, int width, int height, int lengt
         }
 
         for (Direction dir : Direction.values()) {
-            if (!isVoxelAt(x + dir.getOffsetX(), y + dir.getOffsetY(), z + dir.getOffsetZ())) {
+            if (!isVoxelAt(x + dir.getStepX(), y + dir.getStepY(), z + dir.getStepZ())) {
                 return true;
             }
         }

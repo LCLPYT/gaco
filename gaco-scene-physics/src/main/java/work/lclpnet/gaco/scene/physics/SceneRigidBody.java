@@ -1,6 +1,6 @@
 package work.lclpnet.gaco.scene.physics;
 
-import net.minecraft.server.world.ServerWorld;
+import net.minecraft.server.level.ServerLevel;
 import work.lclpnet.kibu.physics.impl.bullet.collision.body.ElementRigidBody;
 import work.lclpnet.kibu.physics.impl.bullet.collision.body.shape.MinecraftShape;
 import work.lclpnet.kibu.physics.impl.bullet.collision.space.MinecraftSpace;
@@ -21,7 +21,7 @@ public class SceneRigidBody extends ElementRigidBody {
         this(element, space, shape, DEFAULT_MASS, DEFAULT_DRAG_COEFFICIENT, DEFAULT_FRICTION, DEFAULT_RESTITUTION);
     }
 
-    public SceneRigidBody(ScenePhysicsElement element, ServerWorld world) {
+    public SceneRigidBody(ScenePhysicsElement element, ServerLevel world) {
         this(element, MinecraftSpace.get(world), element.createShape());
     }
 

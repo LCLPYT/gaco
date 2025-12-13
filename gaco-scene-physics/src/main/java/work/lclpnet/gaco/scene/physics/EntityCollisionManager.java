@@ -1,9 +1,9 @@
 package work.lclpnet.gaco.scene.physics;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityDimensions;
-import net.minecraft.entity.EntityPose;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityDimensions;
+import net.minecraft.world.entity.Pose;
+import net.minecraft.world.level.Level;
 import work.lclpnet.gaco.core.api.EntityRef;
 import work.lclpnet.kibu.physics.impl.bullet.collision.space.MinecraftSpace;
 import work.lclpnet.kibu.physics.impl.bullet.thread.PhysicsThread;
@@ -20,11 +20,11 @@ import static work.lclpnet.kibu.physics.impl.bullet.math.Convert.toBullet;
 
 public class EntityCollisionManager {
 
-    private final World world;
+    private final Level world;
     private final Supplier<Iterable<? extends Entity>> entities;
     private final Map<UUID, Entry> entries = new HashMap<>();
 
-    public EntityCollisionManager(World world, Supplier<Iterable<? extends Entity>> entities) {
+    public EntityCollisionManager(Level world, Supplier<Iterable<? extends Entity>> entities) {
         this.world = world;
         this.entities = entities;
     }
@@ -62,7 +62,7 @@ public class EntityCollisionManager {
         for (Entity entity : entities.get()) {
             if (!entity.isAlive()) continue;
             
-            var element = entries.computeIfAbsent(entity.getUuid(), uuid -> {
+            var element = entries.computeIfAbsent(entity.getUUID(), uuid -> {
                 var entry = new Entry(entity);
 
                 space.add(entry.element.getRigidBody());
@@ -78,7 +78,7 @@ public class EntityCollisionManager {
         Optional<Entry> opt;
 
         synchronized (this) {
-            opt = Optional.ofNullable(entries.get(entity.getUuid()));
+            opt = Optional.ofNullable(entries.get(entity.getUUID()));
         }
 
         return opt.map(e -> e.element.getRigidBody());
@@ -86,7 +86,7 @@ public class EntityCollisionManager {
 
     private static class Entry {
         private final EntityRefPhysicsElement element;
-        private EntityPose lastPose;
+        private Pose lastPose;
 
         public Entry(Entity entity) {
             element = new EntityRefPhysicsElement(new EntityRef<>(entity));
@@ -100,7 +100,7 @@ public class EntityCollisionManager {
         }
 
         public void update(Entity entity) {
-            EntityPose pose = entity.getPose();
+            Pose pose = entity.getPose();
 
             if (pose != lastPose) {
                 lastPose = pose;
@@ -110,7 +110,7 @@ public class EntityCollisionManager {
             EntityDimensions dimensions = entity.getDimensions(pose);
 
             EntityRefRigidBody rigidBody = element.getRigidBody();
-            rigidBody.setPhysicsLocation(toBullet(entity.getEntityPos().add(0, dimensions.height() * 0.5, 0)));
+            rigidBody.setPhysicsLocation(toBullet(entity.position().add(0, dimensions.height() * 0.5, 0)));
             rigidBody.activate();
         }
     }

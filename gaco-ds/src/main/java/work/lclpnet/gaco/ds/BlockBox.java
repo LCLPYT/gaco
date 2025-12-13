@@ -3,7 +3,12 @@ package work.lclpnet.gaco.ds;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import it.unimi.dsi.fastutil.Pair;
-import net.minecraft.util.math.*;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.Position;
+import net.minecraft.core.Vec3i;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.gaco.math.AffineIntMatrix;
@@ -52,7 +57,7 @@ public class BlockBox implements Pair<BlockPos, BlockPos>, Iterable<BlockPos>, C
     @NotNull
     @Override
     public Iterator<BlockPos> iterator() {
-        return BlockPos.iterate(min, max).iterator();
+        return BlockPos.betweenClosed(min, max).iterator();
     }
 
     @Override
@@ -61,7 +66,7 @@ public class BlockBox implements Pair<BlockPos, BlockPos>, Iterable<BlockPos>, C
     }
 
     @Override
-    public boolean collidesWith(Box box) {
+    public boolean collidesWith(AABB box) {
         return intersects(box);
     }
 
@@ -133,8 +138,8 @@ public class BlockBox implements Pair<BlockPos, BlockPos>, Iterable<BlockPos>, C
         return tangentSurface(x, y, z) != null;
     }
 
-    public Vec3d getCenter() {
-        return new Vec3d(
+    public Vec3 getCenter() {
+        return new Vec3(
                 (min.getX() + max.getX()) * 0.5d,
                 (min.getY() + max.getY()) * 0.5d,
                 (min.getZ() + max.getZ()) * 0.5d);
@@ -151,10 +156,10 @@ public class BlockBox implements Pair<BlockPos, BlockPos>, Iterable<BlockPos>, C
     }
 
     public boolean contains(Position pos) {
-        return contains(pos.getX(), pos.getY(), pos.getZ());
+        return contains(pos.x(), pos.y(), pos.z());
     }
 
-    public boolean contains(Box box) {
+    public boolean contains(AABB box) {
         return contains(box.minX, box.minY, box.minZ) && contains(box.maxX, box.maxY, box.maxZ);
     }
 
@@ -173,7 +178,7 @@ public class BlockBox implements Pair<BlockPos, BlockPos>, Iterable<BlockPos>, C
                 && this.max.getZ() >= other.min.getZ() && other.max.getZ() >= this.min.getZ();
     }
 
-    public boolean intersects(Box box) {
+    public boolean intersects(AABB box) {
         return box.intersects(
                 min.getX(), min.getY(), min.getZ(),
                 max.getX() + 1, max.getY() + 1, max.getZ() + 1
@@ -181,10 +186,10 @@ public class BlockBox implements Pair<BlockPos, BlockPos>, Iterable<BlockPos>, C
     }
 
     public BlockPos randomBlockPos(Random random) {
-        return randomBlockPos(new BlockPos.Mutable(), random);
+        return randomBlockPos(new BlockPos.MutableBlockPos(), random);
     }
 
-    public BlockPos.Mutable randomBlockPos(BlockPos.Mutable pos, Random random) {
+    public BlockPos.MutableBlockPos randomBlockPos(BlockPos.MutableBlockPos pos, Random random) {
         int minX = min.getX(), minY = min.getY(), minZ = min.getZ();
         int maxX = max.getX(), maxY = max.getY(), maxZ = max.getZ();
 
@@ -197,7 +202,7 @@ public class BlockBox implements Pair<BlockPos, BlockPos>, Iterable<BlockPos>, C
         return pos;
     }
 
-    public Vec3d randomPos(Random random) {
+    public Vec3 randomPos(Random random) {
         int minX = min.getX(), minY = min.getY(), minZ = min.getZ();
         int maxX = max.getX(), maxY = max.getY(), maxZ = max.getZ();
 
@@ -205,26 +210,26 @@ public class BlockBox implements Pair<BlockPos, BlockPos>, Iterable<BlockPos>, C
         double y = minY + random.nextDouble(maxY - minY + 1);
         double z = minZ + random.nextDouble(maxZ - minZ + 1);
 
-        return new Vec3d(x, y, z);
+        return new Vec3(x, y, z);
     }
 
-    public double squaredDistanceTo(Vec3d pos) {
-        return closestPoint(pos).squaredDistanceTo(pos);
+    public double squaredDistanceTo(Vec3 pos) {
+        return closestPoint(pos).distanceToSqr(pos);
     }
 
-    public Vec3d closestPoint(Position pos) {
-        return closestPoint(pos.getX(), pos.getY(), pos.getZ());
+    public Vec3 closestPoint(Position pos) {
+        return closestPoint(pos.x(), pos.y(), pos.z());
     }
 
-    public Vec3d closestPoint(double x, double y, double z) {
-        return new Vec3d(
+    public Vec3 closestPoint(double x, double y, double z) {
+        return new Vec3(
                 Math.max(Math.min(x, max.getX()), min.getX()),
                 Math.max(Math.min(y, max.getY()), min.getY()),
                 Math.max(Math.min(z, max.getZ()), min.getZ()));
     }
 
-    public Box toBox() {
-        return new Box(min.getX(), min.getY(), min.getZ(),
+    public AABB toBox() {
+        return new AABB(min.getX(), min.getY(), min.getZ(),
                 max.getX() + 1, max.getY() + 1, max.getZ() + 1);
     }
 
@@ -251,7 +256,7 @@ public class BlockBox implements Pair<BlockPos, BlockPos>, Iterable<BlockPos>, C
         int y = i / area;
         int z = (i / width) % length;
 
-        return min.add(x, y, z);
+        return min.offset(x, y, z);
     }
 
     public int posToIndexYZX(BlockPos pos) {
@@ -322,8 +327,8 @@ public class BlockBox implements Pair<BlockPos, BlockPos>, Iterable<BlockPos>, C
         return new BlockBox(pos, pos);
     }
 
-    public static BlockBox of(Box box) {
-        return new BlockBox(BlockPos.ofFloored(box.getMinPos()), BlockPos.ofFloored(box.getMaxPos()));
+    public static BlockBox of(AABB box) {
+        return new BlockBox(BlockPos.containing(box.getMinPosition()), BlockPos.containing(box.getMaxPosition()));
     }
 
     public static BlockBox ofBounds(Cuboid structure) {

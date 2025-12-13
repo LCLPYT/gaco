@@ -3,7 +3,11 @@ package work.lclpnet.gaco.collisions;
 import it.unimi.dsi.fastutil.longs.Long2ObjectArrayMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.objects.ObjectArraySet;
-import net.minecraft.util.math.*;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Position;
+import net.minecraft.core.SectionPos;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.phys.AABB;
 import org.jetbrains.annotations.NotNull;
 import work.lclpnet.gaco.ds.Collider;
 import work.lclpnet.gaco.math.Vec2i;
@@ -47,7 +51,7 @@ public class ChunkedCollisionDetector implements CollisionDetector {
     public void updateCollisions(Position pos, CollisionInfo info) {
         info.reset();
 
-        Region region = regions.get(hashPos(pos.getX(), pos.getZ()));
+        Region region = regions.get(hashPos(pos.x(), pos.z()));
 
         if (region == null) return;
 
@@ -55,11 +59,11 @@ public class ChunkedCollisionDetector implements CollisionDetector {
     }
 
     @Override
-    public void updateCollisions(Box box, CollisionInfo info) {
+    public void updateCollisions(AABB box, CollisionInfo info) {
         info.reset();
 
-        BlockPos min = BlockPos.ofFloored(box.getMinPos());
-        BlockPos max = BlockPos.ofFloored(box.getMaxPos());
+        BlockPos min = BlockPos.containing(box.getMinPosition());
+        BlockPos max = BlockPos.containing(box.getMaxPosition());
 
         for (Vec2i reg : iterateRegions(min, max)) {
             Region region = regions.get(hashRegion(reg.x(), reg.z()));
@@ -72,13 +76,13 @@ public class ChunkedCollisionDetector implements CollisionDetector {
 
     private static long hashPos(double x, double z) {
         return hashRegion(
-                ChunkSectionPos.getSectionCoord(x),
-                ChunkSectionPos.getSectionCoord(z)
+                SectionPos.posToSectionCoord(x),
+                SectionPos.posToSectionCoord(z)
         );
     }
 
     private static long hashRegion(int rx, int rz) {
-        return ChunkPos.toLong(rx, rz);
+        return ChunkPos.asLong(rx, rz);
     }
 
     public static Iterable<Vec2i> iterateRegions(Collider collider) {
@@ -91,11 +95,11 @@ public class ChunkedCollisionDetector implements CollisionDetector {
         var realMin = BlockPos.min(min, max);
         var realMax = BlockPos.max(min, max);
 
-        int minRx = ChunkSectionPos.getSectionCoord(realMin.getX());
-        int minRz = ChunkSectionPos.getSectionCoord(realMin.getZ());
+        int minRx = SectionPos.blockToSectionCoord(realMin.getX());
+        int minRz = SectionPos.blockToSectionCoord(realMin.getZ());
 
-        int maxRx = ChunkSectionPos.getSectionCoord(realMax.getX());
-        int maxRz = ChunkSectionPos.getSectionCoord(realMax.getZ());
+        int maxRx = SectionPos.blockToSectionCoord(realMax.getX());
+        int maxRz = SectionPos.blockToSectionCoord(realMax.getZ());
 
         Vec2i.Mutable pos = new Vec2i.Mutable(minRx, minRz);
 
@@ -133,7 +137,7 @@ public class ChunkedCollisionDetector implements CollisionDetector {
             }
         }
 
-        public void updateCollisions(Box box, CollisionInfo info) {
+        public void updateCollisions(AABB box, CollisionInfo info) {
             for (Collider collider : colliders) {
                 if (collider.collidesWith(box)) {
                     info.add(collider);

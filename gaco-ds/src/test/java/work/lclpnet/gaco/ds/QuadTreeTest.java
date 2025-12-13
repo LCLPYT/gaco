@@ -1,6 +1,6 @@
 package work.lclpnet.gaco.ds;
 
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.phys.Vec3;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -13,7 +13,7 @@ class QuadTreeTest {
 
     @Nested
     class Identity {
-        private QuadTree<Vec3d> quadTree;
+        private QuadTree<Vec3> quadTree;
 
         @BeforeEach
         void setUp() {
@@ -37,25 +37,25 @@ class QuadTreeTest {
 
         @Test
         void testAddWithinBounds() {
-            Vec3d point = new Vec3d(10, 0, 10);
+            Vec3 point = new Vec3(10, 0, 10);
             assertTrue(quadTree.add(point));
             assertEquals(1, quadTree.root.count());
         }
 
         @Test
         void testAddOutOfBounds() {
-            Vec3d point = new Vec3d(-10, 0, -10);
+            Vec3 point = new Vec3(-10, 0, -10);
             assertFalse(quadTree.add(point));
             assertEquals(0, quadTree.root.count());
         }
 
         @Test
         void testQuadTreeSplitsCorrectly() {
-            Vec3d point1 = new Vec3d(10, 0, 10);
-            Vec3d point2 = new Vec3d(15, 0, 15);
-            Vec3d point3 = new Vec3d(20, 0, 20);
-            Vec3d point4 = new Vec3d(25, 0, 25);
-            Vec3d point5 = new Vec3d(30, 0, 30);
+            Vec3 point1 = new Vec3(10, 0, 10);
+            Vec3 point2 = new Vec3(15, 0, 15);
+            Vec3 point3 = new Vec3(20, 0, 20);
+            Vec3 point4 = new Vec3(25, 0, 25);
+            Vec3 point5 = new Vec3(30, 0, 30);
 
             assertTrue(quadTree.add(point1));
             assertTrue(quadTree.add(point2));
@@ -98,10 +98,10 @@ class QuadTreeTest {
 
         @Test
         void testCapacityNotExceeded() {
-            Vec3d point1 = new Vec3d(10, 0, 10);
-            Vec3d point2 = new Vec3d(15, 0, 15);
-            Vec3d point3 = new Vec3d(20, 0, 20);
-            Vec3d point4 = new Vec3d(25, 0, 25);
+            Vec3 point1 = new Vec3(10, 0, 10);
+            Vec3 point2 = new Vec3(15, 0, 15);
+            Vec3 point3 = new Vec3(20, 0, 20);
+            Vec3 point4 = new Vec3(25, 0, 25);
 
             // Insert points up to the node capacity
             assertTrue(quadTree.add(point1));
@@ -121,11 +121,11 @@ class QuadTreeTest {
 
         @Test
         void testInsertionAfterSplit() {
-            Vec3d point1 = new Vec3d(10, 0, 10);
-            Vec3d point2 = new Vec3d(90, 0, 90);
-            Vec3d point3 = new Vec3d(10, 0, 90);
-            Vec3d point4 = new Vec3d(90, 0, 10);
-            Vec3d point5 = new Vec3d(50, 0, 50);
+            Vec3 point1 = new Vec3(10, 0, 10);
+            Vec3 point2 = new Vec3(90, 0, 90);
+            Vec3 point3 = new Vec3(10, 0, 90);
+            Vec3 point4 = new Vec3(90, 0, 10);
+            Vec3 point5 = new Vec3(50, 0, 50);
 
             // Insert points
             quadTree.add(point1);
@@ -137,14 +137,14 @@ class QuadTreeTest {
             quadTree.add(point5);
 
             // Ensure that a point after splitting is inserted correctly
-            Vec3d newPoint = new Vec3d(55, 0, 55);
+            Vec3 newPoint = new Vec3(55, 0, 55);
             assertTrue(quadTree.add(newPoint));
         }
 
         @Test
         void testAddBoundaryConditions() {
-            Vec3d pointOnBoundary1 = new Vec3d(100, 0, 100);
-            Vec3d pointOnBoundary2 = new Vec3d(0, 0, 0);
+            Vec3 pointOnBoundary1 = new Vec3(100, 0, 100);
+            Vec3 pointOnBoundary2 = new Vec3(0, 0, 0);
 
             // Test boundary conditions
             assertFalse(quadTree.add(pointOnBoundary1));
@@ -153,7 +153,7 @@ class QuadTreeTest {
 
         @Test
         void testRemoveElement() {
-            Vec3d point = new Vec3d(10, 0, 10);
+            Vec3 point = new Vec3(10, 0, 10);
             quadTree.add(point);
             assertEquals(1, quadTree.root.count());
 
@@ -163,22 +163,22 @@ class QuadTreeTest {
 
         @Test
         void testRemoveElementThatDoesNotExist() {
-            Vec3d point = new Vec3d(10, 0, 10);
+            Vec3 point = new Vec3(10, 0, 10);
             quadTree.add(point);
             assertEquals(1, quadTree.root.count());
 
-            Vec3d nonExistentPoint = new Vec3d(20, 0, 20);
+            Vec3 nonExistentPoint = new Vec3(20, 0, 20);
             assertFalse(quadTree.remove(nonExistentPoint));
             assertEquals(1, quadTree.root.count());
         }
 
         @Test
         void testRemoveElementAndMerge() {
-            Vec3d point1 = new Vec3d(10, 0, 10);
-            Vec3d point2 = new Vec3d(90, 0, 90);
-            Vec3d point3 = new Vec3d(10, 0, 90);
-            Vec3d point4 = new Vec3d(90, 0, 10);
-            Vec3d point5 = new Vec3d(50, 0, 50);
+            Vec3 point1 = new Vec3(10, 0, 10);
+            Vec3 point2 = new Vec3(90, 0, 90);
+            Vec3 point3 = new Vec3(10, 0, 90);
+            Vec3 point4 = new Vec3(90, 0, 10);
+            Vec3 point5 = new Vec3(50, 0, 50);
 
             quadTree.add(point1);
             quadTree.add(point2);
@@ -207,8 +207,8 @@ class QuadTreeTest {
 
         @Test
         void testRemoveBoundaryConditions() {
-            Vec3d pointOnBoundary1 = new Vec3d(100, 0, 100);
-            Vec3d pointOnBoundary2 = new Vec3d(0, 0, 0);
+            Vec3 pointOnBoundary1 = new Vec3(100, 0, 100);
+            Vec3 pointOnBoundary2 = new Vec3(0, 0, 0);
 
             // Boundary points, one is within and one is out of bounds
             assertFalse(quadTree.add(pointOnBoundary1));
@@ -223,11 +223,11 @@ class QuadTreeTest {
 
         @Test
         void testChildrenIterator() {
-            Vec3d point1 = new Vec3d(10, 0, 10);
-            Vec3d point2 = new Vec3d(90, 0, 90);
-            Vec3d point3 = new Vec3d(10, 0, 90);
-            Vec3d point4 = new Vec3d(90, 0, 10);
-            Vec3d point5 = new Vec3d(50, 0, 50);
+            Vec3 point1 = new Vec3(10, 0, 10);
+            Vec3 point2 = new Vec3(90, 0, 90);
+            Vec3 point3 = new Vec3(10, 0, 90);
+            Vec3 point4 = new Vec3(90, 0, 10);
+            Vec3 point5 = new Vec3(50, 0, 50);
 
             quadTree.add(point1);
             quadTree.add(point2);
@@ -270,7 +270,7 @@ class QuadTreeTest {
 
     @Test
     void testUpdateNotAddedNoop() {
-        var tree = new QuadTree<MutPos>(0, 0, 100, 100, 2, mutPos -> new Vec3d(mutPos.x, 0, mutPos.z));
+        var tree = new QuadTree<MutPos>(0, 0, 100, 100, 2, mutPos -> new Vec3(mutPos.x, 0, mutPos.z));
         var mutPos = new MutPos(10, 20);
 
         tree.update(mutPos);
@@ -281,7 +281,7 @@ class QuadTreeTest {
 
     @Test
     void testUpdateNotSplitNoUpdate() {
-        var tree = new QuadTree<MutPos>(0, 0, 100, 100, 2, mutPos -> new Vec3d(mutPos.x, 0, mutPos.z));
+        var tree = new QuadTree<MutPos>(0, 0, 100, 100, 2, mutPos -> new Vec3(mutPos.x, 0, mutPos.z));
         var mutPos = new MutPos(10, 20);
 
         tree.add(mutPos);
@@ -298,14 +298,14 @@ class QuadTreeTest {
         assertNotNull(tree.root.entries);
 
         // verify tracked position was updated
-        Vec3d pos = tree.root.entries.getFirst().pos;
+        Vec3 pos = tree.root.entries.getFirst().pos;
         assertEquals(60.0, pos.x, 1e-9);
         assertEquals(5.0, pos.z, 1e-9);
     }
 
     @Test
     void testAddTwiceUpdate() {
-        var tree = new QuadTree<MutPos>(0, 0, 100, 100, 2, mutPos -> new Vec3d(mutPos.x, 0, mutPos.z));
+        var tree = new QuadTree<MutPos>(0, 0, 100, 100, 2, mutPos -> new Vec3(mutPos.x, 0, mutPos.z));
         var mutPos = new MutPos(10, 20);
 
         tree.add(mutPos);
@@ -319,14 +319,14 @@ class QuadTreeTest {
         assertNotNull(tree.root.entries);
 
         // verify tracked position was updated
-        Vec3d pos = tree.root.entries.getFirst().pos;
+        Vec3 pos = tree.root.entries.getFirst().pos;
         assertEquals(60.0, pos.x, 1e-9);
         assertEquals(5.0, pos.z, 1e-9);
     }
 
     @Test
     void testUpdateNodeChanged() {
-        var tree = new QuadTree<MutPos>(0, 0, 100, 100, 2, mutPos -> new Vec3d(mutPos.x, 0, mutPos.z));
+        var tree = new QuadTree<MutPos>(0, 0, 100, 100, 2, mutPos -> new Vec3(mutPos.x, 0, mutPos.z));
         var mutPos = new MutPos(10, 20);
 
         tree.add(mutPos);
@@ -352,7 +352,7 @@ class QuadTreeTest {
 
     @Test
     void testUpdateSameNodeUnchanged() {
-        var tree = new QuadTree<MutPos>(0, 0, 100, 100, 2, mutPos -> new Vec3d(mutPos.x, 0, mutPos.z));
+        var tree = new QuadTree<MutPos>(0, 0, 100, 100, 2, mutPos -> new Vec3(mutPos.x, 0, mutPos.z));
         var mutPos = new MutPos(10, 20);
 
         tree.add(mutPos);
@@ -375,7 +375,7 @@ class QuadTreeTest {
 
     @Test
     void testUpdateComplex() {
-        var tree = new QuadTree<MutPos>(0, 0, 100, 100, 4, mutPos -> new Vec3d(mutPos.x, 0, mutPos.z));
+        var tree = new QuadTree<MutPos>(0, 0, 100, 100, 4, mutPos -> new Vec3(mutPos.x, 0, mutPos.z));
         var mutPos = new MutPos(10, 20);
 
         // add all to nw

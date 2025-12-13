@@ -1,7 +1,7 @@
 package work.lclpnet.gaco.scene;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.server.world.ServerWorld;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.server.level.ServerLevel;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.gaco.core.api.Resolvable;
 
@@ -12,7 +12,7 @@ public final class VoidMountContext implements MountContext {
     private VoidMountContext() {}
 
     @Override
-    public ServerWorld world() {
+    public ServerLevel world() {
         throw new UnsupportedOperationException();
     }
 

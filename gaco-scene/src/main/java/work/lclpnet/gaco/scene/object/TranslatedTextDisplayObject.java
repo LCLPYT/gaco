@@ -2,9 +2,9 @@ package work.lclpnet.gaco.scene.object;
 
 import it.unimi.dsi.fastutil.objects.ObjectArraySet;
 import lombok.Getter;
-import net.minecraft.entity.Entity;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3d;
 import work.lclpnet.gaco.dynamic_entities.DynamicEntity;
@@ -26,7 +26,7 @@ public class TranslatedTextDisplayObject extends Object3d implements Mountable, 
     private final DisplayEntityTransformer transformer = new DisplayEntityTransformer();
     private final Set<MountContext> contexts = new ObjectArraySet<>(1);
     private final Vector3d worldPos = new Vector3d(0);
-    private Vec3d mcWorldPos = Vec3d.ZERO;
+    private Vec3 mcWorldPos = Vec3.ZERO;
 
     public TranslatedTextDisplayObject(Scene scene, Translations translations) {
         super(scene);
@@ -53,17 +53,17 @@ public class TranslatedTextDisplayObject extends Object3d implements Mountable, 
         matrixWorld.transformPosition(worldPos.zero());
 
         if (worldPos.x != mcWorldPos.x || worldPos.y != mcWorldPos.y || worldPos.z != mcWorldPos.z) {
-            mcWorldPos = new Vec3d(worldPos.x, worldPos.y, worldPos.z);
+            mcWorldPos = new Vec3(worldPos.x, worldPos.y, worldPos.z);
         }
     }
 
     @Override
-    public Vec3d getPosition() {
+    public Vec3 getPosition() {
         return mcWorldPos;
     }
 
     @Override
-    public @Nullable Entity getEntity(ServerPlayerEntity player) {
+    public @Nullable Entity getEntity(ServerPlayer player) {
         return controller.ref(translations.getLanguage(player), display -> {
             updateWorldPos();
             transformer.update(matrixWorld);
@@ -72,7 +72,7 @@ public class TranslatedTextDisplayObject extends Object3d implements Mountable, 
     }
 
     @Override
-    public void cleanup(ServerPlayerEntity player) {
+    public void cleanup(ServerPlayer player) {
         controller.deref(translations.getLanguage(player));
     }
 

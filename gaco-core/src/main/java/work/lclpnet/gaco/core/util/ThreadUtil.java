@@ -1,7 +1,7 @@
 package work.lclpnet.gaco.core.util;
 
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.util.thread.ThreadExecutor;
+import net.minecraft.util.thread.BlockableEventLoop;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -21,8 +21,8 @@ public class ThreadUtil {
         return res -> server.submit(() -> action.apply(res));
     }
 
-    public static void executeOn(ThreadExecutor<?> executor, Runnable runnable) {
-        if (executor.isOnThread()) {
+    public static void executeOn(BlockableEventLoop<?> executor, Runnable runnable) {
+        if (executor.isSameThread()) {
             runnable.run();
         } else {
             executor.execute(runnable);
@@ -46,8 +46,8 @@ public class ThreadUtil {
         }
     }
 
-    public static void forceThread(ThreadExecutor<?> executor) {
-        if (executor.isOnThread()) return;
+    public static void forceThread(BlockableEventLoop<?> executor) {
+        if (executor.isSameThread()) return;
 
         throw new IllegalStateException("Called on the wrong thread. Expected to run on " + executor);
     }
@@ -59,14 +59,14 @@ public class ThreadUtil {
     }
 
     /**
-     * Checks whether currently running on the given {@link ThreadExecutor} thread, in which case false is returned.
-     * Otherwise, the given action is dispatched to the given {@link ThreadExecutor}, in which case true is returned and the caller should prevent further execution.
-     * @param executor The {@link ThreadExecutor} to check and / or dispatch on.
+     * Checks whether currently running on the given {@link BlockableEventLoop} thread, in which case false is returned.
+     * Otherwise, the given action is dispatched to the given {@link BlockableEventLoop}, in which case true is returned and the caller should prevent further execution.
+     * @param executor The {@link BlockableEventLoop} to check and / or dispatch on.
      * @param runnable The (reference to an) action to be executed.
-     * @return True, if currently running off-thread and whether the runnable was thereby dispatched to the given {@link ThreadExecutor}, false if running of thread and nothing was dispatched.
+     * @return True, if currently running off-thread and whether the runnable was thereby dispatched to the given {@link BlockableEventLoop}, false if running of thread and nothing was dispatched.
      */
-    public static boolean onThreadOrDispatch(ThreadExecutor<?> executor, Runnable runnable) {
-        if (executor.isOnThread()) return false;
+    public static boolean onThreadOrDispatch(BlockableEventLoop<?> executor, Runnable runnable) {
+        if (executor.isSameThread()) return false;
 
         executor.execute(runnable);
         return true;

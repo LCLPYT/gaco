@@ -1,7 +1,7 @@
 package work.lclpnet.gaco.collisions;
 
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Position;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.core.Position;
 import org.jetbrains.annotations.NotNull;
 import work.lclpnet.gaco.ds.Collider;
 
@@ -28,7 +28,7 @@ public interface CollisionDetector {
      * @param box The box to check collisions with.
      * @param info The {@link CollisionInfo} object that collisions will be written to.
      */
-    void updateCollisions(Box box, CollisionInfo info);
+    void updateCollisions(AABB box, CollisionInfo info);
 
     @NotNull
     default Set<Collider> getCollisions(Position pos) {
@@ -39,7 +39,7 @@ public interface CollisionDetector {
     }
 
     @NotNull
-    default Set<Collider> getCollisions(Box box) {
+    default Set<Collider> getCollisions(AABB box) {
         CollisionInfo info = new CollisionInfo(1);
         updateCollisions(box, info);
 

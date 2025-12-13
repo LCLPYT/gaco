@@ -2,8 +2,8 @@ package work.lclpnet.gaco.scene.physics;
 
 import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
-import net.minecraft.block.BlockState;
-import net.minecraft.server.world.ServerWorld;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.server.level.ServerLevel;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Quaternionf;
 import work.lclpnet.gaco.scene.*;
@@ -28,9 +28,9 @@ public class PhysicsBlockDisplayObject extends Object3d
     private final Quaternion storedJmeRotation = new Quaternion();
     protected final SceneRigidBody rigidBody;
     private final BlockDisplayObject blockDisplay;
-    protected final ServerWorld world;
+    protected final ServerLevel world;
 
-    public PhysicsBlockDisplayObject(Scene scene, BlockState state, ServerWorld world) {
+    public PhysicsBlockDisplayObject(Scene scene, BlockState state, ServerLevel world) {
         super(scene);
         this.world = world;
 
@@ -43,7 +43,7 @@ public class PhysicsBlockDisplayObject extends Object3d
         rigidBody = initRigidBody(world);
     }
 
-    protected SceneRigidBody initRigidBody(ServerWorld world) {
+    protected SceneRigidBody initRigidBody(ServerLevel world) {
         forcePhysicsThread();
 
         var rigidBody = new SceneRigidBody(this, world);
@@ -77,11 +77,11 @@ public class PhysicsBlockDisplayObject extends Object3d
         removePhysics(ctx.world());
     }
 
-    public void addPhysics(ServerWorld world) {
+    public void addPhysics(ServerLevel world) {
         executePhysics(() -> MinecraftSpace.get(world).addCollisionObject(rigidBody));
     }
 
-    public void removePhysics(ServerWorld world) {
+    public void removePhysics(ServerLevel world) {
         executePhysics(() -> MinecraftSpace.get(world).removeCollisionObject(rigidBody));
     }
 

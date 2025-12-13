@@ -1,6 +1,6 @@
 package work.lclpnet.gaco.ds;
 
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
 import work.lclpnet.gaco.math.AffineIntMatrix;
@@ -42,7 +42,7 @@ public class BVH {
 
         // sort boxes along the major axis
         var axis = bounds.majorAxis();
-        boxes.sort(Comparator.comparingInt(box -> box.min().getComponentAlongAxis(axis)));
+        boxes.sort(Comparator.comparingInt(box -> box.min().get(axis)));
 
         // split list into halves and recursively build the tree
         int mid = boxes.size() / 2;

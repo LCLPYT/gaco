@@ -1,7 +1,7 @@
 package work.lclpnet.gaco.math;
 
 import com.mojang.serialization.Codec;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.phys.Vec3;
 import org.ejml.data.SingularMatrixException;
 import org.ejml.simple.SimpleMatrix;
 import org.jetbrains.annotations.NotNull;
@@ -20,10 +20,10 @@ import static java.lang.Math.min;
 
 public class SplinePath {
 
-    public static final Codec<SplinePath> CODEC = Vec3d.CODEC.listOf().xmap(
+    public static final Codec<SplinePath> CODEC = Vec3.CODEC.listOf().xmap(
             SplinePath::new,
             path -> IntStream.range(0, path.n)
-                    .mapToObj(i -> new Vec3d(path.x[i], path.y[i], path.z[i]))
+                    .mapToObj(i -> new Vec3(path.x[i], path.y[i], path.z[i]))
                     .toList()
     );
 
@@ -32,7 +32,7 @@ public class SplinePath {
     private final double[] arcLength;
     private final int n;
 
-    protected SplinePath(List<Vec3d> keypoints) throws SingularMatrixException {
+    protected SplinePath(List<Vec3> keypoints) throws SingularMatrixException {
         n = keypoints.size();
 
         if (n < 2) {
@@ -44,11 +44,11 @@ public class SplinePath {
         z = new double[n];
 
         for (int i = 0; i < n; i++) {
-            Vec3d p = keypoints.get(i);
+            Vec3 p = keypoints.get(i);
 
-            x[i] = p.getX();
-            y[i] = p.getY();
-            z[i] = p.getZ();
+            x[i] = p.x();
+            y[i] = p.y();
+            z[i] = p.z();
         }
 
         d2x = solveNaturalCubic(n, x);
@@ -63,13 +63,13 @@ public class SplinePath {
 
         double[] arcLength = new double[samples];
 
-        Vec3d start = samplePositionLinear(0.d);
+        Vec3 start = samplePositionLinear(0.d);
         double totalLen = 0.d;
 
         arcLength[0] = totalLen;
 
         for (int i = 1; i < samples; i++) {
-            Vec3d end = samplePositionLinear(i * dt);
+            Vec3 end = samplePositionLinear(i * dt);
 
             totalLen += start.distanceTo(end);
             arcLength[i] = totalLen;
@@ -85,13 +85,13 @@ public class SplinePath {
      * @param t The progress parameter ranging [0..1].
      * @return The position vector at t.
      */
-    public Vec3d samplePositionLinear(double t) {
+    public Vec3 samplePositionLinear(double t) {
         if (t <= 0.d) {
-            return new Vec3d(x[0], y[0], z[0]);
+            return new Vec3(x[0], y[0], z[0]);
         }
 
         if (t >= 1.d) {
-            return new Vec3d(x[n - 1], y[n - 1], z[n - 1]);
+            return new Vec3(x[n - 1], y[n - 1], z[n - 1]);
         }
 
         t *= n - 1;
@@ -108,7 +108,7 @@ public class SplinePath {
         double ys = a * y[i] + b * y[i + 1] + (a3ma * d2y[i] + b3mb * d2y[i + 1]) / 6.d;
         double zs = a * z[i] + b * z[i + 1] + (a3ma * d2z[i] + b3mb * d2z[i + 1]) / 6.d;
 
-        return new Vec3d(xs, ys, zs);
+        return new Vec3(xs, ys, zs);
     }
 
     /**
@@ -117,7 +117,7 @@ public class SplinePath {
      * @param t The progress parameter ranging [0..1].
      * @return The tangent vector at t, not necessarily a unit vector.
      */
-    public Vec3d sampleFirstDerivativeLinear(double t) {
+    public Vec3 sampleFirstDerivativeLinear(double t) {
         if (t <= 0) t = 0.0;
         if (t >= 1) t = 1.0;
 
@@ -133,7 +133,7 @@ public class SplinePath {
         double dzs = -z[i] + z[i + 1] + (-(3 * a * a - 1) * d2z[i] + (3 * b * b - 1) * d2z[i + 1]) / 6.0;
 
         // derivative w.r.t global t, multiply by (n−1)
-        return new Vec3d(dxs * (n - 1), dys * (n - 1), dzs * (n - 1));
+        return new Vec3(dxs * (n - 1), dys * (n - 1), dzs * (n - 1));
     }
 
     /**
@@ -142,7 +142,7 @@ public class SplinePath {
      * @param t The progress parameter ranging [0..1].
      * @return The curvature vector at t, not necessarily a unit vector.
      */
-    public @NotNull Vec3d sampleSecondDerivativeLinear(double t) {
+    public @NotNull Vec3 sampleSecondDerivativeLinear(double t) {
         double t_tau = t * (n - 1);
 
         int i = min(n - 2, (int) floor(t_tau));
@@ -154,7 +154,7 @@ public class SplinePath {
         double d2ys = (a * d2y[i] + b * d2y[i + 1]) * (n - 1) * (n - 1);
         double d2zs = (a * d2z[i] + b * d2z[i + 1]) * (n - 1) * (n - 1);
 
-        return new Vec3d(d2xs, d2ys, d2zs);
+        return new Vec3(d2xs, d2ys, d2zs);
     }
 
     /**
@@ -162,7 +162,7 @@ public class SplinePath {
      * @param s The progress parameter ranging [0..1].
      * @return The position vector at s.
      */
-    public Vec3d samplePosition(double s) {
+    public Vec3 samplePosition(double s) {
         return samplePositionLinear(getLinearProgress(s));
     }
 
@@ -172,7 +172,7 @@ public class SplinePath {
      * @param s The progress parameter ranging [0..1].
      * @return The tangent vector at s.
      */
-    public Vec3d sampleDirection(double s) {
+    public Vec3 sampleDirection(double s) {
         return sampleFirstDerivativeLinear(getLinearProgress(s)).normalize();
     }
 
@@ -182,7 +182,7 @@ public class SplinePath {
      * @param s The progress parameter ranging [0..1].
      * @return The curvature vector at s.
      */
-    public Vec3d sampleCurvature(double s) {
+    public Vec3 sampleCurvature(double s) {
         return sampleSecondDerivativeLinear(getLinearProgress(s));
     }
 
@@ -193,7 +193,7 @@ public class SplinePath {
      * @return The spline parameter [0..1] that can be used to retrieve the nearest path position towards
      * the query position using the {@link #samplePosition(double)} method.
      */
-    public double getProgress(Vec3d queryPos) {
+    public double getProgress(Vec3 queryPos) {
         double t = getLinearProgress(queryPos);
 
         return getProgress(t);
@@ -206,7 +206,7 @@ public class SplinePath {
      * @return The spline parameter [0..1] that can be used to retrieve the nearest path position towards
      * the query position using the {@link #samplePositionLinear(double)} method.
      */
-    public double getLinearProgress(Vec3d queryPos) {
+    public double getLinearProgress(Vec3 queryPos) {
         // estimate segment progress, then refine using Newtons method
         double t = estimateSegmentProgress(queryPos);
 
@@ -214,19 +214,19 @@ public class SplinePath {
         final double EPSILON = 1e-6;
 
         for (int iter = 0; iter < MAX_ITERATIONS; iter++) {
-            Vec3d pos = samplePositionLinear(t);
-            Vec3d d1 = sampleFirstDerivativeLinear(t);  // first derivative
+            Vec3 pos = samplePositionLinear(t);
+            Vec3 d1 = sampleFirstDerivativeLinear(t);  // first derivative
 
-            Vec3d V = pos.subtract(queryPos);
+            Vec3 V = pos.subtract(queryPos);
 
             // f(t) = V . P'(t)
-            double ft = V.dotProduct(d1);
+            double ft = V.dot(d1);
 
             if (abs(ft) < EPSILON) break;
 
             // Calculate f'(t)
-            Vec3d d2 = sampleSecondDerivativeLinear(t);  // second derivative
-            double d1t = d1.dotProduct(d1) + V.dotProduct(d2);
+            Vec3 d2 = sampleSecondDerivativeLinear(t);  // second derivative
+            double d1t = d1.dot(d1) + V.dot(d2);
 
             if (abs(d1t) < 1e-10) break;
 
@@ -237,7 +237,7 @@ public class SplinePath {
         return t;
     }
 
-    public Vec3d getNearestPosition(Vec3d queryPos) {
+    public Vec3 getNearestPosition(Vec3 queryPos) {
         double s = getLinearProgress(queryPos);
 
         return samplePositionLinear(s);
@@ -310,7 +310,7 @@ public class SplinePath {
      * @return The estimated progress
      */
     @VisibleForTesting
-    protected double estimateSegmentProgress(Vec3d queryPos) {
+    protected double estimateSegmentProgress(Vec3 queryPos) {
         final double dt = 1.d / (arcLength.length - 1);
 
         // arcLength pos to spline parameter
@@ -320,8 +320,8 @@ public class SplinePath {
         for (int i = 0; i < arcLength.length; i++) {
             double t = i * dt;
 
-            Vec3d sample = samplePositionLinear(t);
-            double distSq = queryPos.squaredDistanceTo(sample);
+            Vec3 sample = samplePositionLinear(t);
+            double distSq = queryPos.distanceToSqr(sample);
 
             if (distSq < minSqDist) {
                 minSqDist = distSq;
@@ -351,11 +351,11 @@ public class SplinePath {
         return max(0, -(i + 1) - 1);
     }
 
-    public List<Vec3d> getKeypoints() {
-        List<Vec3d> keypoints = new ArrayList<>(n);
+    public List<Vec3> getKeypoints() {
+        List<Vec3> keypoints = new ArrayList<>(n);
 
         for (int i = 0; i < n; i++) {
-            keypoints.add(new Vec3d(x[i], y[i], z[i]));
+            keypoints.add(new Vec3(x[i], y[i], z[i]));
         }
 
         return keypoints;
@@ -399,7 +399,7 @@ public class SplinePath {
         return out;
     }
 
-    public static Optional<SplinePath> create(List<Vec3d> keypoints, Logger logger) {
+    public static Optional<SplinePath> create(List<Vec3> keypoints, Logger logger) {
         if (keypoints.size() < 2) {
             logger.error("Too few keypoints to create a spline path");
             return Optional.empty();

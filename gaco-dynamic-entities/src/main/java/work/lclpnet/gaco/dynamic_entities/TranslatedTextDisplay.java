@@ -2,14 +2,14 @@ package work.lclpnet.gaco.dynamic_entities;
 
 import lombok.Getter;
 import lombok.Setter;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.decoration.Brightness;
-import net.minecraft.entity.decoration.DisplayEntity;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.AffineTransformation;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.util.Brightness;
+import net.minecraft.world.entity.Display;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.level.ServerLevel;
+import com.mojang.math.Transformation;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.gaco.ds.RefCounted;
 import work.lclpnet.kibu.translate.Translations;
@@ -26,23 +26,23 @@ public class TranslatedTextDisplay implements DynamicEntity {
     private final Translations translations;
     private final ControllerImpl controller;
 
-    public TranslatedTextDisplay(ServerWorld world, Translations translations) {
+    public TranslatedTextDisplay(ServerLevel world, Translations translations) {
         this.translations = translations;
         controller = new ControllerImpl(world);
     }
 
     @Override
-    public Vec3d getPosition() {
+    public Vec3 getPosition() {
         return controller.getPosition();
     }
 
     @Override
-    public Entity getEntity(ServerPlayerEntity player) {
+    public Entity getEntity(ServerPlayer player) {
         return controller.ref(translations.getLanguage(player), display -> {});
     }
 
     @Override
-    public void cleanup(ServerPlayerEntity player) {
+    public void cleanup(ServerPlayer player) {
         controller.deref(translations.getLanguage(player));
     }
 
@@ -53,8 +53,8 @@ public class TranslatedTextDisplay implements DynamicEntity {
     public interface Controller {
         void setText(TextTranslatable text);
         TextTranslatable getText();
-        void setPosition(Vec3d position);
-        Vec3d getPosition();
+        void setPosition(Vec3 position);
+        Vec3 getPosition();
         void setLineWidth(int lineWidth);
         int getLineWidth();
         void setTextOpacity(byte textOpacity);
@@ -63,16 +63,16 @@ public class TranslatedTextDisplay implements DynamicEntity {
         int getBackground();
         void setDisplayFlags(byte displayFlags);
         byte getDisplayFlags();
-        void setTransformation(AffineTransformation transformation);
-        AffineTransformation getTransformation();
+        void setTransformation(Transformation transformation);
+        Transformation getTransformation();
         void setInterpolationDuration(int interpolationDuration);
         int getInterpolationDuration();
         void setTeleportDuration(int teleportDuration);
         int getTeleportDuration();
         void setStartInterpolation(int startInterpolation);
         int getStartInterpolation();
-        void setBillboardMode(DisplayEntity.BillboardMode billboardMode);
-        DisplayEntity.BillboardMode getBillboardMode();
+        void setBillboardMode(Display.BillboardConstraints billboardMode);
+        Display.BillboardConstraints getBillboardMode();
         void setBrightness(@Nullable Brightness brightness);
         @Nullable Brightness getBrightness();
         void setViewRange(float viewRange);
@@ -95,19 +95,19 @@ public class TranslatedTextDisplay implements DynamicEntity {
 
     public static class ControllerImpl implements Controller {
 
-        @Setter private @Nullable ServerWorld world;
-        @Getter private final RefCounted<String, DisplayEntity.TextDisplayEntity> entities = new RefCounted<>(HashMap::new);
+        @Setter private @Nullable ServerLevel world;
+        @Getter private final RefCounted<String, Display.TextDisplay> entities = new RefCounted<>(HashMap::new);
         @Getter private TextTranslatable text = TranslatedText.create(lang -> RootText.create(), player -> "");  // empty by default
-        @Getter private Vec3d position = Vec3d.ZERO;
+        @Getter private Vec3 position = Vec3.ZERO;
         @Getter private int lineWidth = 200;
         @Getter private byte textOpacity = (byte) -1;
         @Getter private int background = 0;
         @Getter private byte displayFlags = (byte) 0;
-        @Getter private AffineTransformation transformation = AffineTransformation.identity();
+        @Getter private Transformation transformation = Transformation.identity();
         @Getter private int interpolationDuration = 0;
         @Getter private int teleportDuration = 0;
         @Getter private int startInterpolation = 0;
-        @Getter private DisplayEntity.BillboardMode billboardMode = DisplayEntity.BillboardMode.FIXED;
+        @Getter private Display.BillboardConstraints billboardMode = Display.BillboardConstraints.FIXED;
         private @Nullable Brightness brightness = null;
         @Getter private float viewRange = 1.0F;
         @Getter private float shadowRadius = 0.0F;
@@ -116,31 +116,31 @@ public class TranslatedTextDisplay implements DynamicEntity {
         @Getter private float displayHeight = 0.0F;
         @Getter private int glowColorOverride = -1;
 
-        public ControllerImpl(@Nullable ServerWorld world) {
+        public ControllerImpl(@Nullable ServerLevel world) {
             this.world = world;
         }
 
-        public DisplayEntity.TextDisplayEntity ref(String language, Consumer<DisplayEntity.TextDisplayEntity> init) {
+        public Display.TextDisplay ref(String language, Consumer<Display.TextDisplay> init) {
             return entities.reference(language, lang -> {
-                var textDisplay = new DisplayEntity.TextDisplayEntity(EntityType.TEXT_DISPLAY, world);
-                textDisplay.setPosition(position);
+                var textDisplay = new Display.TextDisplay(EntityType.TEXT_DISPLAY, world);
+                textDisplay.setPos(position);
 
                 textDisplay.setText(text.translateTo(lang));
                 textDisplay.setLineWidth(lineWidth);
                 textDisplay.setTextOpacity(textOpacity);
-                textDisplay.setBackground(background);
-                textDisplay.setDisplayFlags(displayFlags);
+                textDisplay.setBackgroundColor(background);
+                textDisplay.setFlags(displayFlags);
                 textDisplay.setTransformation(transformation);
-                textDisplay.setInterpolationDuration(interpolationDuration);
-                textDisplay.setTeleportDuration(teleportDuration);
-                textDisplay.setStartInterpolation(startInterpolation);
-                textDisplay.setBillboardMode(billboardMode);
-                textDisplay.setBrightness(brightness);
+                textDisplay.setTransformationInterpolationDuration(interpolationDuration);
+                textDisplay.setPosRotInterpolationDuration(teleportDuration);
+                textDisplay.setTransformationInterpolationDelay(startInterpolation);
+                textDisplay.setBillboardConstraints(billboardMode);
+                textDisplay.setBrightnessOverride(brightness);
                 textDisplay.setViewRange(viewRange);
                 textDisplay.setShadowRadius(shadowRadius);
                 textDisplay.setShadowStrength(shadowStrength);
-                textDisplay.setDisplayWidth(displayWidth);
-                textDisplay.setDisplayHeight(displayHeight);
+                textDisplay.setWidth(displayWidth);
+                textDisplay.setHeight(displayHeight);
                 textDisplay.setGlowColorOverride(glowColorOverride);
 
                 init.accept(textDisplay);
@@ -161,10 +161,10 @@ public class TranslatedTextDisplay implements DynamicEntity {
         }
 
         @Override
-        public void setPosition(Vec3d position) {
+        public void setPosition(Vec3 position) {
             this.position = Objects.requireNonNull(position);
 
-            entities.forEach(display -> display.setPosition(position));
+            entities.forEach(display -> display.setPos(position));
         }
 
         @Override
@@ -185,18 +185,18 @@ public class TranslatedTextDisplay implements DynamicEntity {
         public void setBackground(int background) {
             this.background = background;
 
-            entities.forEach(display -> display.setBackground(background));
+            entities.forEach(display -> display.setBackgroundColor(background));
         }
 
         @Override
         public void setDisplayFlags(byte displayFlags) {
             this.displayFlags = displayFlags;
 
-            entities.forEach(display -> display.setDisplayFlags(displayFlags));
+            entities.forEach(display -> display.setFlags(displayFlags));
         }
 
         @Override
-        public void setTransformation(AffineTransformation transformation) {
+        public void setTransformation(Transformation transformation) {
             this.transformation = transformation;
 
             entities.forEach(display -> display.setTransformation(transformation));
@@ -206,35 +206,35 @@ public class TranslatedTextDisplay implements DynamicEntity {
         public void setInterpolationDuration(int interpolationDuration) {
             this.interpolationDuration = interpolationDuration;
 
-            entities.forEach(display -> display.setInterpolationDuration(interpolationDuration));
+            entities.forEach(display -> display.setTransformationInterpolationDuration(interpolationDuration));
         }
 
         @Override
         public void setTeleportDuration(int teleportDuration) {
             this.teleportDuration = teleportDuration;
 
-            entities.forEach(display -> display.setTeleportDuration(teleportDuration));
+            entities.forEach(display -> display.setPosRotInterpolationDuration(teleportDuration));
         }
 
         @Override
         public void setStartInterpolation(int startInterpolation) {
             this.startInterpolation = startInterpolation;
 
-            entities.forEach(display -> display.setStartInterpolation(startInterpolation));
+            entities.forEach(display -> display.setTransformationInterpolationDelay(startInterpolation));
         }
 
         @Override
-        public void setBillboardMode(DisplayEntity.BillboardMode billboardMode) {
+        public void setBillboardMode(Display.BillboardConstraints billboardMode) {
             this.billboardMode = billboardMode;
 
-            entities.forEach(display -> display.setBillboardMode(billboardMode));
+            entities.forEach(display -> display.setBillboardConstraints(billboardMode));
         }
 
         @Override
         public void setBrightness(@Nullable Brightness brightness) {
             this.brightness = brightness;
 
-            entities.forEach(display -> display.setBrightness(brightness));
+            entities.forEach(display -> display.setBrightnessOverride(brightness));
         }
 
         @Override
@@ -267,14 +267,14 @@ public class TranslatedTextDisplay implements DynamicEntity {
         public void setDisplayWidth(float displayWidth) {
             this.displayWidth = displayWidth;
 
-            entities.forEach(display -> display.setDisplayWidth(displayWidth));
+            entities.forEach(display -> display.setWidth(displayWidth));
         }
 
         @Override
         public void setDisplayHeight(float displayHeight) {
             this.displayHeight = displayHeight;
 
-            entities.forEach(display -> display.setDisplayHeight(displayHeight));
+            entities.forEach(display -> display.setHeight(displayHeight));
         }
 
         @Override

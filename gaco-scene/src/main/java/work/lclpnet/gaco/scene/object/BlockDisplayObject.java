@@ -1,14 +1,14 @@
 package work.lclpnet.gaco.scene.object;
 
 import lombok.Getter;
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.decoration.DisplayEntity;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Display;
 import work.lclpnet.gaco.scene.MountContext;
 import work.lclpnet.gaco.scene.Scene;
 
 @Getter
-public class BlockDisplayObject extends DisplayEntityObject<DisplayEntity.BlockDisplayEntity> {
+public class BlockDisplayObject extends DisplayEntityObject<Display.BlockDisplay> {
 
     private BlockState blockState;
 
@@ -18,12 +18,12 @@ public class BlockDisplayObject extends DisplayEntityObject<DisplayEntity.BlockD
     }
 
     @Override
-    protected DisplayEntity.BlockDisplayEntity createDisplayEntity(MountContext ctx) {
-        return new DisplayEntity.BlockDisplayEntity(EntityType.BLOCK_DISPLAY, ctx.world());
+    protected Display.BlockDisplay createDisplayEntity(MountContext ctx) {
+        return new Display.BlockDisplay(EntityType.BLOCK_DISPLAY, ctx.world());
     }
 
     @Override
-    protected void configure(DisplayEntity.BlockDisplayEntity display) {
+    protected void configure(Display.BlockDisplay display) {
         super.configure(display);
 
         display.setBlockState(blockState);

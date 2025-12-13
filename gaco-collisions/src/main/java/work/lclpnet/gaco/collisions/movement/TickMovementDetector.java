@@ -1,6 +1,6 @@
 package work.lclpnet.gaco.collisions.movement;
 
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.NotNull;
 import work.lclpnet.gaco.collisions.util.PlayerAction;
 import work.lclpnet.kibu.hook.Hook;
@@ -18,11 +18,11 @@ public class TickMovementDetector implements Runnable {
 
     private static final double MIN_DISTANCE_SQ = 1.0E-6;
     private final Hook<PlayerAction> hook = PlayerAction.createHook();
-    private final Supplier<Iterable<? extends ServerPlayerEntity>> players;
+    private final Supplier<Iterable<? extends ServerPlayer>> players;
     private final Map<UUID, Entry> entries = new HashMap<>();
     private TaskHandle task = null;
 
-    public TickMovementDetector(Supplier<Iterable<? extends ServerPlayerEntity>> players) {
+    public TickMovementDetector(Supplier<Iterable<? extends ServerPlayer>> players) {
         this.players = players;
     }
 
@@ -49,18 +49,18 @@ public class TickMovementDetector implements Runnable {
         }
 
         if (!wasInitialized) {
-            hooks.registerHook(PlayerConnectionHooks.QUIT, player -> entries.remove(player.getUuid()));
+            hooks.registerHook(PlayerConnectionHooks.QUIT, player -> entries.remove(player.getUUID()));
         }
     }
 
     @NotNull
-    private Entry getEntry(ServerPlayerEntity player) {
-        return entries.computeIfAbsent(player.getUuid(), uuid -> new Entry());
+    private Entry getEntry(ServerPlayer player) {
+        return entries.computeIfAbsent(player.getUUID(), uuid -> new Entry());
     }
 
     @Override
     public void run() {
-        for (ServerPlayerEntity player : players.get()) {
+        for (ServerPlayer player : players.get()) {
             Entry entry = getEntry(player);
 
             boolean moved = entry.update(player.getX(), player.getY(), player.getZ());

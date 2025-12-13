@@ -1,8 +1,8 @@
 package work.lclpnet.gaco.collisions;
 
-import net.minecraft.Bootstrap;
+import net.minecraft.server.Bootstrap;
 import net.minecraft.SharedConstants;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.phys.Vec3;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import work.lclpnet.gaco.ds.BlockBox;
@@ -16,8 +16,8 @@ class ChunkedCollisionDetectorTest {
 
     @BeforeAll
     public static void bootstrap() {
-        SharedConstants.createGameVersion();
-        Bootstrap.initialize();
+        SharedConstants.tryDetectVersion();
+        Bootstrap.bootStrap();
     }
 
     @Test
@@ -107,7 +107,7 @@ class ChunkedCollisionDetectorTest {
         BlockBox box = new BlockBox(1, 0, 1, 1, 0, 1);
         detector.add(box);
 
-        assertEquals(Set.of(box), detector.getCollisions(new Vec3d(1.5, 0, 1.5)));
+        assertEquals(Set.of(box), detector.getCollisions(new Vec3(1.5, 0, 1.5)));
     }
 
     @Test
@@ -117,7 +117,7 @@ class ChunkedCollisionDetectorTest {
         BlockBox box = new BlockBox(1, 0, 1, 1, 0, 1);
         detector.add(box);
 
-        assertEquals(Set.of(), detector.getCollisions(new Vec3d(1.5, 1.5, 1.5)));
+        assertEquals(Set.of(), detector.getCollisions(new Vec3(1.5, 1.5, 1.5)));
     }
 
     @Test
@@ -127,9 +127,9 @@ class ChunkedCollisionDetectorTest {
         BlockBox box = new BlockBox(1, 0, 1, 18, 17, 2);
         detector.add(box);
 
-        assertEquals(Set.of(box), detector.getCollisions(new Vec3d(5, 5, 1)));
-        assertEquals(Set.of(box), detector.getCollisions(new Vec3d(17, 5, 1)));
-        assertEquals(Set.of(), detector.getCollisions(new Vec3d(0, 0, 0)));
+        assertEquals(Set.of(box), detector.getCollisions(new Vec3(5, 5, 1)));
+        assertEquals(Set.of(box), detector.getCollisions(new Vec3(17, 5, 1)));
+        assertEquals(Set.of(), detector.getCollisions(new Vec3(0, 0, 0)));
     }
 
     @Test
@@ -144,11 +144,11 @@ class ChunkedCollisionDetectorTest {
         detector.add(snd);
         detector.add(trd);
 
-        assertEquals(Set.of(fst), detector.getCollisions(new Vec3d(1, 1, 1)));
-        assertEquals(Set.of(fst, snd), detector.getCollisions(new Vec3d(5, 5, 5)));
-        assertEquals(Set.of(fst, snd, trd), detector.getCollisions(new Vec3d(6, 6, 6)));
-        assertEquals(Set.of(fst, trd), detector.getCollisions(new Vec3d(7, 7, 7)));
-        assertEquals(Set.of(trd), detector.getCollisions(new Vec3d(8, 8, 8)));
+        assertEquals(Set.of(fst), detector.getCollisions(new Vec3(1, 1, 1)));
+        assertEquals(Set.of(fst, snd), detector.getCollisions(new Vec3(5, 5, 5)));
+        assertEquals(Set.of(fst, snd, trd), detector.getCollisions(new Vec3(6, 6, 6)));
+        assertEquals(Set.of(fst, trd), detector.getCollisions(new Vec3(7, 7, 7)));
+        assertEquals(Set.of(trd), detector.getCollisions(new Vec3(8, 8, 8)));
     }
 
     private boolean addedToAll(ChunkedCollisionDetector detector, Collider collider) {

@@ -1,12 +1,12 @@
 package work.lclpnet.gaco.collisions.util;
 
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.level.ServerPlayer;
 import work.lclpnet.kibu.hook.Hook;
 import work.lclpnet.kibu.hook.HookFactory;
 
 public interface PlayerAction {
 
-    void act(ServerPlayerEntity player);
+    void act(ServerPlayer player);
 
     static Hook<PlayerAction> createHook() {
         return HookFactory.createArrayBacked(PlayerAction.class, callbacks -> player -> {

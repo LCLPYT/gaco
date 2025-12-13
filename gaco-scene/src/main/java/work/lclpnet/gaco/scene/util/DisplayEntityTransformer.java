@@ -1,7 +1,7 @@
 package work.lclpnet.gaco.scene.util;
 
-import net.minecraft.entity.decoration.DisplayEntity;
-import net.minecraft.util.math.AffineTransformation;
+import net.minecraft.world.entity.Display;
+import com.mojang.math.Transformation;
 import org.joml.*;
 
 public class DisplayEntityTransformer {
@@ -11,7 +11,7 @@ public class DisplayEntityTransformer {
     private final Quaternionf rotation = new Quaternionf();
     private final Matrix4f mat4f = new Matrix4f();
     private final Matrix4d prevMatrix = new Matrix4d().scale(Double.NaN);
-    private AffineTransformation transformation = new AffineTransformation(mat4f);
+    private Transformation transformation = new Transformation(mat4f);
 
     public synchronized boolean update(Matrix4dc matrix) {
         if (matrix.equals(prevMatrix)) return false;
@@ -27,20 +27,20 @@ public class DisplayEntityTransformer {
                 .rotate(rotation)
                 .scale((float) scale.x(), (float) scale.y(), (float) scale.z());
 
-        transformation = new AffineTransformation(mat4f);
+        transformation = new Transformation(mat4f);
 
         return true;
     }
 
-    public void updateAndApply(DisplayEntity display, Matrix4dc matrix) {
+    public void updateAndApply(Display display, Matrix4dc matrix) {
         if (update(matrix)) {
             apply(display);
         }
     }
 
-    public void apply(DisplayEntity display) {
-        display.updatePosition(position.x, position.y, position.z);
+    public void apply(Display display) {
+        display.absSnapTo(position.x, position.y, position.z);
         display.setTransformation(transformation);
-        display.setStartInterpolation(0);
+        display.setTransformationInterpolationDelay(0);
     }
 }

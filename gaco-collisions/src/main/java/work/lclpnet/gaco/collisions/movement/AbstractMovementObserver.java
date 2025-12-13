@@ -1,10 +1,9 @@
 package work.lclpnet.gaco.collisions.movement;
 
-import net.minecraft.entity.EntityDimensions;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Position;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.core.Position;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.EntityDimensions;
+import net.minecraft.world.phys.AABB;
 import org.jetbrains.annotations.NotNull;
 import work.lclpnet.gaco.collisions.CollisionDetector;
 import work.lclpnet.gaco.collisions.CollisionInfo;
@@ -23,15 +22,15 @@ import static java.lang.Math.max;
 public class AbstractMovementObserver implements MovementObserver {
 
     private final CollisionDetector collisionDetector;
-    private final Predicate<ServerPlayerEntity> predicate;
+    private final Predicate<ServerPlayer> predicate;
     private final Map<UUID, Entry> entries = new HashMap<>();
-    private final Map<Collider, Consumer<ServerPlayerEntity>> regionEnter = new HashMap<>();
-    private final Map<Collider, Consumer<ServerPlayerEntity>> regionLeave = new HashMap<>();
+    private final Map<Collider, Consumer<ServerPlayer>> regionEnter = new HashMap<>();
+    private final Map<Collider, Consumer<ServerPlayer>> regionLeave = new HashMap<>();
     protected final boolean useHitboxes;
     protected final double hitboxMargin;
-    private BiConsumer<ServerPlayerEntity, Collider> onEnter = null, onLeave = null;
+    private BiConsumer<ServerPlayer, Collider> onEnter = null, onLeave = null;
 
-    public AbstractMovementObserver(CollisionDetector collisionDetector, Predicate<ServerPlayerEntity> predicate,
+    public AbstractMovementObserver(CollisionDetector collisionDetector, Predicate<ServerPlayer> predicate,
                                     boolean useHitboxes, double hitboxMargin) {
         this.collisionDetector = collisionDetector;
         this.predicate = predicate;
@@ -40,17 +39,17 @@ public class AbstractMovementObserver implements MovementObserver {
     }
 
     @Override
-    public void setRegionEnterListener(BiConsumer<ServerPlayerEntity, Collider> onEnter) {
+    public void setRegionEnterListener(BiConsumer<ServerPlayer, Collider> onEnter) {
         this.onEnter = onEnter;
     }
 
     @Override
-    public void setRegionLeaveListener(BiConsumer<ServerPlayerEntity, Collider> onLeave) {
+    public void setRegionLeaveListener(BiConsumer<ServerPlayer, Collider> onLeave) {
         this.onLeave = onLeave;
     }
 
     @Override
-    public void whenEntering(Collider region, Consumer<ServerPlayerEntity> action) {
+    public void whenEntering(Collider region, Consumer<ServerPlayer> action) {
         Objects.requireNonNull(region);
         Objects.requireNonNull(action);
 
@@ -61,7 +60,7 @@ public class AbstractMovementObserver implements MovementObserver {
     }
 
     @Override
-    public void whenLeaving(Collider region, Consumer<ServerPlayerEntity> action) {
+    public void whenLeaving(Collider region, Consumer<ServerPlayer> action) {
         Objects.requireNonNull(region);
         Objects.requireNonNull(action);
 
@@ -88,37 +87,37 @@ public class AbstractMovementObserver implements MovementObserver {
         onLeave = null;
     }
 
-    protected void updateMovement(ServerPlayerEntity player, Position pos) {
+    protected void updateMovement(ServerPlayer player, Position pos) {
         if (useHitboxes) {
             EntityDimensions dimensions = player.getDimensions(player.getPose());
-            Box box = dimensions.getBoxAt(pos.getX(), pos.getY(), pos.getZ());
-            onMove(player, box.expand(hitboxMargin));
+            AABB box = dimensions.makeBoundingBox(pos.x(), pos.y(), pos.z());
+            onMove(player, box.inflate(hitboxMargin));
         } else {
             onMove(player, pos);
         }
     }
 
-    private void onMove(ServerPlayerEntity player, Position pos) {
+    private void onMove(ServerPlayer player, Position pos) {
         if (!predicate.test(player)) return;
 
-        Entry entry = entries.computeIfAbsent(player.getUuid(), uuid -> new Entry());
+        Entry entry = entries.computeIfAbsent(player.getUUID(), uuid -> new Entry());
 
         collisionDetector.updateCollisions(pos, entry.current);
 
         processCollisions(player, entry);
     }
 
-    private void onMove(ServerPlayerEntity player, Box box) {
+    private void onMove(ServerPlayer player, AABB box) {
         if (!predicate.test(player)) return;
 
-        Entry entry = entries.computeIfAbsent(player.getUuid(), uuid -> new Entry());
+        Entry entry = entries.computeIfAbsent(player.getUUID(), uuid -> new Entry());
 
         collisionDetector.updateCollisions(box, entry.current);
 
         processCollisions(player, entry);
     }
 
-    private void processCollisions(ServerPlayerEntity player, Entry entry) {
+    private void processCollisions(ServerPlayer player, Entry entry) {
         if (entry.last.equals(entry.current)) return;
 
         for (var left : entry.last.diff(entry.current)) {
@@ -132,7 +131,7 @@ public class AbstractMovementObserver implements MovementObserver {
         entry.last.set(entry.current);
     }
 
-    private void onEnter(ServerPlayerEntity player, @NotNull Collider region) {
+    private void onEnter(ServerPlayer player, @NotNull Collider region) {
         if (onEnter != null) {
             onEnter.accept(player, region);
         }
@@ -144,7 +143,7 @@ public class AbstractMovementObserver implements MovementObserver {
         }
     }
 
-    private void onLeave(ServerPlayerEntity player, @NotNull Collider region) {
+    private void onLeave(ServerPlayer player, @NotNull Collider region) {
         if (onLeave != null) {
             onLeave.accept(player, region);
         }

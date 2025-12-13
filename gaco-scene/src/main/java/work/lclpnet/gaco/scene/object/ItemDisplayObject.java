@@ -1,15 +1,15 @@
 package work.lclpnet.gaco.scene.object;
 
 import lombok.Getter;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.decoration.DisplayEntity;
-import net.minecraft.item.ItemDisplayContext;
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Display;
+import net.minecraft.world.item.ItemDisplayContext;
+import net.minecraft.world.item.ItemStack;
 import work.lclpnet.gaco.scene.MountContext;
 import work.lclpnet.gaco.scene.Scene;
 
 @Getter
-public class ItemDisplayObject extends DisplayEntityObject<DisplayEntity.ItemDisplayEntity> {
+public class ItemDisplayObject extends DisplayEntityObject<Display.ItemDisplay> {
 
     private ItemStack stack;
     private ItemDisplayContext itemDisplayContext = ItemDisplayContext.NONE;
@@ -20,16 +20,16 @@ public class ItemDisplayObject extends DisplayEntityObject<DisplayEntity.ItemDis
     }
 
     @Override
-    protected DisplayEntity.ItemDisplayEntity createDisplayEntity(MountContext ctx) {
-        return new DisplayEntity.ItemDisplayEntity(EntityType.ITEM_DISPLAY, ctx.world());
+    protected Display.ItemDisplay createDisplayEntity(MountContext ctx) {
+        return new Display.ItemDisplay(EntityType.ITEM_DISPLAY, ctx.world());
     }
 
     @Override
-    protected void configure(DisplayEntity.ItemDisplayEntity display) {
+    protected void configure(Display.ItemDisplay display) {
         super.configure(display);
 
         display.setItemStack(stack);
-        display.setItemDisplayContext(itemDisplayContext);
+        display.setItemTransform(itemDisplayContext);
     }
 
     @Override
@@ -48,6 +48,6 @@ public class ItemDisplayObject extends DisplayEntityObject<DisplayEntity.ItemDis
 
     public void setItemDisplayContext(ItemDisplayContext itemDisplayContext) {
         this.itemDisplayContext = itemDisplayContext;
-        entityRef.optional().ifPresent(display -> display.setItemDisplayContext(itemDisplayContext));
+        entityRef.optional().ifPresent(display -> display.setItemTransform(itemDisplayContext));
     }
 }

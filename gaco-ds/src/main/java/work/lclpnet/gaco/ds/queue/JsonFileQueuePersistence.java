@@ -9,7 +9,7 @@ import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.JsonOps;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import org.slf4j.Logger;
 
 import java.io.IOException;
@@ -106,7 +106,7 @@ public class JsonFileQueuePersistence<T> implements QueuePersistence<T> {
         return Optional.ofNullable(json);
     }
 
-    public static <T> JsonFileQueuePersistence<T> create(String configId, Identifier id, Codec<T> elementCodec, Logger logger) {
+    public static <T> JsonFileQueuePersistence<T> create(String configId, ResourceLocation id, Codec<T> elementCodec, Logger logger) {
         Path path = Path.of("config")
                 .resolve(configId)
                 .resolve("queues")

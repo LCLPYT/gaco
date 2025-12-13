@@ -1,7 +1,7 @@
 package work.lclpnet.gaco.scene;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.server.world.ServerWorld;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.server.level.ServerLevel;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.gaco.core.api.EntityRef;
 import work.lclpnet.gaco.core.api.Resolvable;
@@ -14,7 +14,7 @@ import work.lclpnet.gaco.dynamic_entities.DynamicEntityManager;
  * @param world                The server world.
  * @param dynamicEntityManager The dynamic entity manager.
  */
-public record MixedMountContext(ServerWorld world, DynamicEntityManager dynamicEntityManager) implements MountContext {
+public record MixedMountContext(ServerLevel world, DynamicEntityManager dynamicEntityManager) implements MountContext {
 
     @Override
     public <T extends Entity> Resolvable<@Nullable T> spawn(@Nullable T entity, Object3d origin) {
@@ -25,7 +25,7 @@ public record MixedMountContext(ServerWorld world, DynamicEntityManager dynamicE
             return Resolvable.constant(entity);
         }
 
-        if (entity != null && world.spawnEntity(entity)) {
+        if (entity != null && world.addFreshEntity(entity)) {
             return new EntityRef<>(entity);
         }
 

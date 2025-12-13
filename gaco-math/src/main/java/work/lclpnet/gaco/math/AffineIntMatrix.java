@@ -1,8 +1,8 @@
 package work.lclpnet.gaco.math;
 
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.math.Vec3i;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.core.Vec3i;
 import work.lclpnet.kibu.util.math.Matrix3i;
 
 import java.util.Arrays;
@@ -40,7 +40,7 @@ public class AffineIntMatrix {
         elements[8] = me[6]; elements[9] = me[7]; elements[10] = me[8]; elements[11] = translateZ;
     }
 
-    public void transform(int x, int y, int z, BlockPos.Mutable target) {
+    public void transform(int x, int y, int z, BlockPos.MutableBlockPos target) {
         // points have w=1 in homogeneous coordinates
         target.set(
                 elements[0] * x + elements[1] * y + elements[2] * z + elements[3],
@@ -49,7 +49,7 @@ public class AffineIntMatrix {
         );
     }
 
-    public void transformVector(int x, int y, int z, BlockPos.Mutable target) {
+    public void transformVector(int x, int y, int z, BlockPos.MutableBlockPos target) {
         // vectors have w=0 in homogeneous coordinates
         target.set(
                 elements[0] * x + elements[1] * y + elements[2] * z,
@@ -59,16 +59,16 @@ public class AffineIntMatrix {
     }
 
     public BlockPos transform(int x, int y, int z) {
-        BlockPos.Mutable pos = new BlockPos.Mutable();
+        BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
 
         transform(x, y, z, pos);
 
         return pos;
     }
 
-    public Vec3d transform(double x, double y, double z) {
+    public Vec3 transform(double x, double y, double z) {
         // points have w=1 in homogeneous coordinates
-        return new Vec3d(
+        return new Vec3(
                 elements[0] * x + elements[1] * y + elements[2] * z + elements[3],
                 elements[4] * x + elements[5] * y + elements[6] * z + elements[7],
                 elements[8] * x + elements[9] * y + elements[10] * z + elements[11]
@@ -76,16 +76,16 @@ public class AffineIntMatrix {
     }
 
     public BlockPos transformVector(int x, int y, int z) {
-        BlockPos.Mutable vec = new BlockPos.Mutable();
+        BlockPos.MutableBlockPos vec = new BlockPos.MutableBlockPos();
 
         transformVector(x, y, z, vec);
 
         return vec;
     }
 
-    public Vec3d transformVector(double x, double y, double z) {
+    public Vec3 transformVector(double x, double y, double z) {
         // vectors have w=0 in homogeneous coordinates
-        return new Vec3d(
+        return new Vec3(
                 elements[0] * x + elements[1] * y + elements[2] * z,
                 elements[4] * x + elements[5] * y + elements[6] * z,
                 elements[8] * x + elements[9] * y + elements[10] * z
@@ -100,8 +100,8 @@ public class AffineIntMatrix {
         return transform(pos.getX(), pos.getY(), pos.getZ());
     }
 
-    public Vec3d transform(Vec3d pos) {
-        return transform(pos.getX(), pos.getY(), pos.getZ());
+    public Vec3 transform(Vec3 pos) {
+        return transform(pos.x(), pos.y(), pos.z());
     }
 
     public AffineIntMatrix multiply(AffineIntMatrix right) {

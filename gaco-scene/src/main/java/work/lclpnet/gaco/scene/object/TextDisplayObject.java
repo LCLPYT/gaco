@@ -1,35 +1,35 @@
 package work.lclpnet.gaco.scene.object;
 
 import lombok.Getter;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.decoration.DisplayEntity;
-import net.minecraft.text.Text;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Display;
+import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.gaco.scene.MountContext;
 import work.lclpnet.gaco.scene.Scene;
 
 @Getter
-public class TextDisplayObject extends DisplayEntityObject<DisplayEntity.TextDisplayEntity> {
+public class TextDisplayObject extends DisplayEntityObject<Display.TextDisplay> {
 
-    private Text text;
+    private Component text;
     private int background = 1073741824;
 
-    public TextDisplayObject(Scene scene, Text text) {
+    public TextDisplayObject(Scene scene, Component text) {
         super(scene);
         this.text = text;
     }
 
     @Override
-    protected @Nullable DisplayEntity.TextDisplayEntity createDisplayEntity(MountContext ctx) {
-        return new DisplayEntity.TextDisplayEntity(EntityType.TEXT_DISPLAY, ctx.world());
+    protected @Nullable Display.TextDisplay createDisplayEntity(MountContext ctx) {
+        return new Display.TextDisplay(EntityType.TEXT_DISPLAY, ctx.world());
     }
 
     @Override
-    protected void configure(DisplayEntity.TextDisplayEntity display) {
+    protected void configure(Display.TextDisplay display) {
         super.configure(display);
 
         display.setText(text);
-        display.setBackground(background);
+        display.setBackgroundColor(background);
     }
 
     @Override
@@ -41,13 +41,13 @@ public class TextDisplayObject extends DisplayEntityObject<DisplayEntity.TextDis
         return copy;
     }
 
-    public void setText(Text text) {
+    public void setText(Component text) {
         this.text = text;
         entityRef.optional().ifPresent(display -> display.setText(text));
     }
 
     public void setBackground(int background) {
         this.background = background;
-        entityRef.optional().ifPresent(display -> display.setBackground(background));
+        entityRef.optional().ifPresent(display -> display.setBackgroundColor(background));
     }
 }

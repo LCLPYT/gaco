@@ -1,10 +1,10 @@
 package work.lclpnet.gaco.scene.object;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.server.PlayerManager;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.server.players.PlayerList;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.gaco.core.api.Resolvable;
 import work.lclpnet.gaco.dynamic_entities.DynamicEntity;
@@ -18,14 +18,14 @@ import java.util.UUID;
  */
 public class PlayerTextDisplayObject extends TextDisplayObject implements DynamicEntity {
 
-    private final Resolvable<ServerPlayerEntity> playerRef;
+    private final Resolvable<ServerPlayer> playerRef;
     private final WorldPosSync posSync = new WorldPosSync();
 
-    public PlayerTextDisplayObject(Scene scene, Text text, ServerPlayerEntity player) {
+    public PlayerTextDisplayObject(Scene scene, Component text, ServerPlayer player) {
         super(scene, text);
 
-        UUID uuid = player.getUuid();
-        PlayerManager manager = player.getEntityWorld().getServer().getPlayerManager();
+        UUID uuid = player.getUUID();
+        PlayerList manager = player.level().getServer().getPlayerList();
 
         this.playerRef = () -> manager.getPlayer(uuid);
     }
@@ -38,13 +38,13 @@ public class PlayerTextDisplayObject extends TextDisplayObject implements Dynami
     }
 
     @Override
-    public Vec3d getPosition() {
+    public Vec3 getPosition() {
         return posSync.mcWorldPos();
     }
 
     @Override
-    public @Nullable Entity getEntity(ServerPlayerEntity player) {
-        ServerPlayerEntity owner = playerRef.resolve();
+    public @Nullable Entity getEntity(ServerPlayer player) {
+        ServerPlayer owner = playerRef.resolve();
 
         if (owner == null || owner != player) return null;
 
@@ -52,7 +52,7 @@ public class PlayerTextDisplayObject extends TextDisplayObject implements Dynami
     }
 
     @Override
-    public void cleanup(ServerPlayerEntity player) {
+    public void cleanup(ServerPlayer player) {
         // no need to clean anything, as the entity will be unreferenced when the object is dismounted
     }
 }

@@ -1,16 +1,16 @@
 package work.lclpnet.gaco.core.api;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
 
-public record EntityRef<T extends Entity>(UUID uuid, World world, Class<T> type) implements Resolvable<@Nullable T> {
+public record EntityRef<T extends Entity>(UUID uuid, Level world, Class<T> type) implements Resolvable<@Nullable T> {
 
     @SuppressWarnings("unchecked")
     public EntityRef(T entity) {
-        this(entity.getUuid(), entity.getEntityWorld(), (Class<T>) entity.getClass());
+        this(entity.getUUID(), entity.level(), (Class<T>) entity.getClass());
     }
 
     @SuppressWarnings("unchecked")

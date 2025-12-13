@@ -1,7 +1,7 @@
 package work.lclpnet.gaco.scene.object;
 
 import lombok.Getter;
-import net.minecraft.entity.decoration.DisplayEntity;
+import net.minecraft.world.entity.Display;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.gaco.core.api.Resolvable;
@@ -12,7 +12,7 @@ import work.lclpnet.gaco.scene.util.DisplayEntityTransformer;
 import static work.lclpnet.gaco.core.util.ThreadUtil.executeOn;
 
 
-public abstract class DisplayEntityObject<T extends DisplayEntity> extends Object3d implements Mountable, Unmountable, Interpolatable {
+public abstract class DisplayEntityObject<T extends Display> extends Object3d implements Mountable, Unmountable, Interpolatable {
 
     @Getter
     private final DisplayEntityTransformer transformer = new DisplayEntityTransformer();
@@ -21,7 +21,7 @@ public abstract class DisplayEntityObject<T extends DisplayEntity> extends Objec
     @Getter private int glowColorOverride = -1;
     @Getter private int interpolationDuration = 0;
     @Getter private int teleportDuration = 0;
-    @Getter private DisplayEntity.BillboardMode billboardMode = DisplayEntity.BillboardMode.FIXED;
+    @Getter private Display.BillboardConstraints billboardMode = Display.BillboardConstraints.FIXED;
 
     public DisplayEntityObject(Scene scene) {
         super(scene);
@@ -54,11 +54,11 @@ public abstract class DisplayEntityObject<T extends DisplayEntity> extends Objec
         transformer.updateAndApply(display, matrixWorld);
 
         display.setGlowColorOverride(glowColorOverride);
-        display.setInterpolationDuration(interpolationDuration);
-        display.setTeleportDuration(teleportDuration);
-        display.setBillboardMode(billboardMode);
+        display.setTransformationInterpolationDuration(interpolationDuration);
+        display.setPosRotInterpolationDuration(teleportDuration);
+        display.setBillboardConstraints(billboardMode);
 
-        display.setGlowing(glowing);
+        display.setGlowingTag(glowing);
     }
 
     @Override
@@ -84,22 +84,22 @@ public abstract class DisplayEntityObject<T extends DisplayEntity> extends Objec
 
     public void setGlowing(boolean glowing) {
         this.glowing = glowing;
-        entityRef.optional().ifPresent(display -> display.setGlowing(glowing));
+        entityRef.optional().ifPresent(display -> display.setGlowingTag(glowing));
     }
 
     public void setInterpolationDuration(int interpolationDuration) {
         this.interpolationDuration = interpolationDuration;
-        entityRef.optional().ifPresent(display -> display.setInterpolationDuration(interpolationDuration));
+        entityRef.optional().ifPresent(display -> display.setTransformationInterpolationDuration(interpolationDuration));
     }
 
     public void setTeleportDuration(int teleportDuration) {
         this.teleportDuration = teleportDuration;
-        entityRef.optional().ifPresent(display -> display.setTeleportDuration(teleportDuration));
+        entityRef.optional().ifPresent(display -> display.setPosRotInterpolationDuration(teleportDuration));
     }
 
-    public void setBillboardMode(DisplayEntity.BillboardMode billboardMode) {
+    public void setBillboardMode(Display.BillboardConstraints billboardMode) {
         this.billboardMode = billboardMode;
-        entityRef.optional().ifPresent(display -> display.setBillboardMode(billboardMode));
+        entityRef.optional().ifPresent(display -> display.setBillboardConstraints(billboardMode));
     }
 
     protected void removeDisplay(MountContext ctx) {

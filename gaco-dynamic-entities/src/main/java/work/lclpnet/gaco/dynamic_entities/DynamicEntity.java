@@ -1,8 +1,8 @@
 package work.lclpnet.gaco.dynamic_entities;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -11,14 +11,14 @@ import org.jetbrains.annotations.Nullable;
  */
 public interface DynamicEntity {
 
-    Vec3d getPosition();
+    Vec3 getPosition();
 
     /**
      * Return the entity that should be shown for a given player.
      * @param player The player
      * @return The entity, or null if the entity shouldn't exist for the player.
      */
-    @Nullable Entity getEntity(ServerPlayerEntity player);
+    @Nullable Entity getEntity(ServerPlayer player);
 
-    void cleanup(ServerPlayerEntity player);
+    void cleanup(ServerPlayer player);
 }

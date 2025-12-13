@@ -1,7 +1,7 @@
 package work.lclpnet.gaco.ds;
 
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.Vec3;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -63,7 +63,7 @@ class BlockBoxTest {
     @Test
     public void closestPoint_contained_self() {
         BlockBox box = new BlockBox(0, 0, 0, 2, 2, 2);
-        assertEquals(new Vec3d(1, 1, 1), box.closestPoint(new Vec3d(1, 1, 1)));
+        assertEquals(new Vec3(1, 1, 1), box.closestPoint(new Vec3(1, 1, 1)));
     }
 
     @ParameterizedTest
@@ -74,11 +74,11 @@ class BlockBoxTest {
     })
     public void closestPoint_outside_asExpected(int px, int py, int pz, int ex, int ey, int ez) {
         BlockBox box = new BlockBox(0, 0, 0, 2, 2, 2);
-        Vec3d point = new Vec3d(px, py, pz);
+        Vec3 point = new Vec3(px, py, pz);
         assertFalse(box.contains(point));
 
-        Vec3d closestPoint = box.closestPoint(point);
-        Vec3d expected = new Vec3d(ex, ey, ez);
+        Vec3 closestPoint = box.closestPoint(point);
+        Vec3 expected = new Vec3(ex, ey, ez);
         assertEquals(expected, closestPoint);
     }
 

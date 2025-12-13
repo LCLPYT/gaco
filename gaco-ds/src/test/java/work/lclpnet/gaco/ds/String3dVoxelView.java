@@ -1,6 +1,6 @@
 package work.lclpnet.gaco.ds;
 
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
 
 import java.util.Arrays;
 import java.util.List;

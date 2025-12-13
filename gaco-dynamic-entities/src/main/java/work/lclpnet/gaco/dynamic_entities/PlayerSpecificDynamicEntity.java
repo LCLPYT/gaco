@@ -1,9 +1,9 @@
 package work.lclpnet.gaco.dynamic_entities;
 
 import lombok.Getter;
-import net.minecraft.entity.Entity;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
@@ -21,15 +21,15 @@ public class PlayerSpecificDynamicEntity<T extends Entity> implements DynamicEnt
     }
 
     @Override
-    public Vec3d getPosition() {
-        return entity.getEntityPos();
+    public Vec3 getPosition() {
+        return entity.position();
     }
 
     @Override
-    public @Nullable T getEntity(ServerPlayerEntity player) {
-        return player.getUuid().equals(viewerUuid) ? entity : null;
+    public @Nullable T getEntity(ServerPlayer player) {
+        return player.getUUID().equals(viewerUuid) ? entity : null;
     }
 
     @Override
-    public void cleanup(ServerPlayerEntity player) {}
+    public void cleanup(ServerPlayer player) {}
 }

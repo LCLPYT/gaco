@@ -1,6 +1,6 @@
 package work.lclpnet.gaco.scene.animation;
 
-import net.minecraft.server.world.ServerWorld;
+import net.minecraft.server.level.ServerLevel;
 
-public record AnimationContext(ServerWorld world) {
+public record AnimationContext(ServerLevel world) {
 }
