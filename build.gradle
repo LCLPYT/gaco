@@ -12,8 +12,8 @@ static def substitutions(Project project) {
     return [
             version          : project.version,
             loader_version   : project.loader_version,
-            minecraft_version: project.minecraft_version,
-            java_version     : project.java_version
+            java_version     : project.java_version,
+            minecraft_compat : project.minecraft_compat,
     ]
 }
 
