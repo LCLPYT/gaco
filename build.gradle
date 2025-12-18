@@ -3,7 +3,7 @@ import work.lclpnet.build.task.GithubDeploymentTask
 import java.util.stream.Collectors
 
 plugins {
-	id 'net.fabricmc.fabric-loom' version "${loom_version}" apply false
+	id 'net.fabricmc.fabric-loom-remap' version "${loom_version}" apply false
 	id 'gradle-build-utils' version '1.7.0'
     id "io.freefair.lombok" version "8.11"
 }
@@ -35,7 +35,7 @@ allprojects {
 
     apply plugin: 'java'
     apply plugin: 'maven-publish'
-    apply plugin: 'fabric-loom'
+    apply plugin: 'net.fabricmc.fabric-loom-remap'
     apply plugin: 'io.freefair.lombok'
 
     repositories {
