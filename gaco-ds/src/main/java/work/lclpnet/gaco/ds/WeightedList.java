@@ -5,6 +5,7 @@ import it.unimi.dsi.fastutil.floats.FloatList;
 import it.unimi.dsi.fastutil.floats.FloatLists;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
+import org.jspecify.annotations.NonNull;
 
 import java.util.*;
 import java.util.function.Function;
@@ -154,14 +155,26 @@ public class WeightedList<E> extends AbstractList<E> {
         return -1;
     }
 
+    /**
+     * Applies a mapping function to each element.
+     * The order of the mapped elements and their weights stay the same.
+     * @param mapper The mapping function to apply to each element.
+     * @return A copy of this list, with the mapped elements.
+     * @param <U> The mapped element result type.
+     */
     public synchronized <U> WeightedList<U> map(Function<E, U> mapper) {
         List<U> mappedElements = this.elements.stream()
                 .map(mapper)
                 .collect(Collectors.toCollection(ArrayList::new));
 
-        return new WeightedList<>(mappedElements, cumulativeWeights, totalWeight);
+        return new WeightedList<>(mappedElements, new FloatArrayList(cumulativeWeights), totalWeight);
     }
 
+    /**
+     * Filters elements from this list and returns a new weighted list of the remaining elements.
+     * @param predicate The predicate.
+     * @return A copy of this list, with only the filtered elements.
+     */
     public synchronized WeightedList<E> filter(Predicate<E> predicate) {
         int[] indices = IntStream.range(0, this.elements.size())
                 .filter(i -> predicate.test(get(i)))
@@ -183,12 +196,87 @@ public class WeightedList<E> extends AbstractList<E> {
         return new WeightedList<>(filtered, filteredCumulativeWeights, totalWeight);
     }
 
-    public WeightedList<E> immutableView() {
+    /**
+     * Creates a copy of this list.
+     * @return A copy of this weighted list.
+     */
+    public synchronized WeightedList<E> copy() {
+        return new WeightedList<>(new ArrayList<>(elements), new FloatArrayList(cumulativeWeights), totalWeight);
+    }
+
+    /**
+     * Returns an immutable view of this list.
+     * Changes to the source are still reflected in the immutable view.
+     * If this is undesirable, use {@link #copy()} instead.
+     * @return An immutable (read only) view of this weighted list.
+     */
+    public synchronized WeightedList<E> immutableView() {
         if (this.getClass() == Immutable.class) {
             return this;
         }
 
         return new Immutable<>(elements, cumulativeWeights, totalWeight);
+    }
+
+    /**
+     * Returns a normalized copy of this list, so that the totalWeight of all the weights will be one.
+     * @return A normalized copy of this list.
+     */
+    public synchronized WeightedList<E> normalized() {
+        final float norm = 1f / totalWeight;
+        final int size = size();
+
+        FloatList normalizedCumulativeWeights = new FloatArrayList(size);
+
+        for (int i = 0; i < size; i++) {
+            normalizedCumulativeWeights.add(i, cumulativeWeights.getFloat(i) * norm);
+        }
+
+        return new WeightedList<>(new ArrayList<>(elements), normalizedCumulativeWeights, 1f);
+    }
+
+    /**
+     * Gets the total weight of an element.
+     * Since the element may be in the list multiple times, the method needs to walk the whole list -> O(n).
+     * @param element The element to check.
+     * @return The total probability of the
+     */
+    public synchronized float getTotalWeight(E element) {
+        float totalWeight = 0;
+
+        for (int i = 0, size = size(); i < size; i++) {
+            if (!Objects.equals(elements.get(i), element)) continue;
+
+            float lastWeight = i >= 1 ? cumulativeWeights.getFloat(i - 1) : 0f;
+            float cumulativeWeight = cumulativeWeights.getFloat(i);
+
+            float weight = cumulativeWeight - lastWeight;
+
+            totalWeight += weight;
+        }
+
+        return totalWeight;
+    }
+
+    @Override
+    public boolean addAll(@NonNull Collection<? extends E> c) {
+        if (!(c instanceof WeightedList<? extends E> weighted)) {
+            throw new IllegalArgumentException("Input list must also be a weighted list");
+        }
+
+        if (weighted.isEmpty()) return false;
+
+        int size = weighted.size();
+
+        for (int i = 0; i < size; i++) {
+            float prevWeight = i >= 1 ? weighted.cumulativeWeights.getFloat(i - 1) : 0f;
+            float cumulativeWeight = weighted.cumulativeWeights.getFloat(i);
+            float weight = cumulativeWeight - prevWeight;
+
+            add(weighted.elements.get(i), weight);
+        }
+
+        return super.addAll(c);
     }
 
     public static <E> WeightedList<E> of(Collection<? extends E> elements, Function<E, Number> probabilityMapper) {
