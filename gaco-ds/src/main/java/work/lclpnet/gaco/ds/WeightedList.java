@@ -224,12 +224,17 @@ public class WeightedList<E> extends AbstractList<E> {
      */
     public synchronized WeightedList<E> normalized() {
         final float norm = 1f / totalWeight;
+
+        return scaleWeights(norm);
+    }
+
+    public synchronized WeightedList<E> scaleWeights(float factor) {
         final int size = size();
 
         FloatList normalizedCumulativeWeights = new FloatArrayList(size);
 
         for (int i = 0; i < size; i++) {
-            normalizedCumulativeWeights.add(i, cumulativeWeights.getFloat(i) * norm);
+            normalizedCumulativeWeights.add(i, cumulativeWeights.getFloat(i) * factor);
         }
 
         return new WeightedList<>(new ArrayList<>(elements), normalizedCumulativeWeights, 1f);
