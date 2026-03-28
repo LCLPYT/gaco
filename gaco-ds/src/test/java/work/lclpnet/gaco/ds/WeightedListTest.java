@@ -356,10 +356,11 @@ class WeightedListTest {
         boolean changed = target.addAll(source);
 
         assertTrue(changed);
-        // Checking if weights were extracted correctly from cumulativeWeights logic
+
         assertEquals(5.0f, target.getTotalWeight("new1"), 0.001f);
         assertEquals(15.0f, target.getTotalWeight("new2"), 0.001f);
         assertEquals(30.0f, target.getTotalWeight("existing") + 5.0f + 15.0f, 0.001f);
+        assertEquals(30.0f, target.getTotalWeight(), 0.001f);
     }
 
     @Test
@@ -388,19 +389,16 @@ class WeightedListTest {
     @Test
     void testAddAll_maintainsCumulativeIntegrity() {
         var target = new WeightedList<Integer>();
-        target.add(1, 1.0f); // total 1.0
+        target.add(1, 1.0f);
 
         var source = new WeightedList<Integer>();
         source.add(2, 2.0f);
-        source.add(3, 3.0f); // source weights are 2 and 3
+        source.add(3, 3.0f);
 
         target.addAll(source);
 
-        // Verify the math: 1.0 (existing) + 2.0 (new) + 3.0 (new) = 6.0
-        // We can verify this via getRandomIndex logic indirectly
-        // or by checking the total weight if accessible.
         Random fixedRandom = new Random();
-        // A simple way to check if the cumulative weights are still ordered and valid:
+
         for (int i = 0; i < 50; i++) {
             assertDoesNotThrow(() -> target.getRandomElement(fixedRandom));
         }

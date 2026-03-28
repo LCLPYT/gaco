@@ -276,7 +276,11 @@ public class WeightedList<E> extends AbstractList<E> {
             add(weighted.elements.get(i), weight);
         }
 
-        return super.addAll(c);
+        return true;
+    }
+
+    public float getTotalWeight() {
+        return totalWeight;
     }
 
     public static <E> WeightedList<E> of(Collection<? extends E> elements, Function<E, Number> probabilityMapper) {
