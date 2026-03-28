@@ -22,7 +22,7 @@ public class AssetPath implements Comparable<AssetPath> {
 
         for (String segment : segments) {
             if (segment.indexOf('/') != -1) {
-                throw new IllegalArgumentException("Segment '%s' contains a slash, which is disallowed");
+                throw new IllegalArgumentException("Segment '%s' contains a slash, which is disallowed".formatted(segment));
             }
         }
     }
