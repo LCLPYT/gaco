@@ -7,9 +7,14 @@ ext {
 }
 
 dependencies {
-    include(implementation("org.ejml:ejml-core:${project.ejml_version}"))
-    include(implementation("org.ejml:ejml-simple:${project.ejml_version}"))
-    include(implementation("org.ejml:ejml-ddense:${project.ejml_version}"))
+    def includeImpl = { dep ->
+        implementation(dep)
+        include(dep)
+    }
+
+    includeImpl(libs.ejml.core)
+    includeImpl(libs.ejml.simple)
+    includeImpl(libs.ejml.ddense)
 }
 
 publishing {

@@ -1,6 +1,5 @@
 import groovy.xml.XmlSlurper
 import work.lclpnet.build.task.GithubDeploymentTask
-import org.apache.tools.ant.filters.ReplaceTokens
 
 import java.util.stream.Collectors
 
@@ -66,13 +65,13 @@ allprojects {
         implementation(libs.fabric.loader)
         implementation(libs.fabric.api)
 
-        compileOnly('org.jetbrains:annotations:24.1.0')
+        compileOnly(libs.jetbrains.annotations)
 
-        testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.1")
-        testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.8.1")
-        testImplementation("org.mockito:mockito-core:5.6.0")
-        testImplementation("org.junit.jupiter:junit-jupiter-params:5.8.1")
-        testImplementation("net.fabricmc:fabric-loader-junit:${libs.versions.fabric.loader.get()}")
+        testImplementation(libs.junit.jupiter.api)
+        testRuntimeOnly(libs.junit.jupiter.engine)
+        testImplementation(libs.mockito.core)
+        testImplementation(libs.junit.jupiter.params)
+        testImplementation(libs.fabric.loader.junit)
     }
 
     test {
@@ -216,7 +215,7 @@ for (final def module in kibuModules) {
 }
 
 dependencies {
-    implementation("work.lclpnet.mods.kibu:kibu-physics:$project.kibu_physics_version")
+    implementation(libs.kibu.physics)
 }
 
 loom {
