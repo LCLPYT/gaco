@@ -308,7 +308,7 @@ def checkProjectIsDeployed(Project project, Properties props) {
 
     String xml
     try {
-        xml = URI.create(url).toURL()
+        xml = URI.create(url).toURL().text
     } catch (Throwable ignored) {
         return false
     }
