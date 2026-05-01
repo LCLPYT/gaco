@@ -25,7 +25,7 @@ public class ChunkedCollisionDetector implements CollisionDetector {
         Objects.requireNonNull(collider);
 
         for (Vec2i reg : iterateRegions(collider)) {
-            var region = regions.computeIfAbsent(hashRegion(reg.x(), reg.z()), l -> Region.create());
+            var region = regions.computeIfAbsent(hashRegion(reg.x(), reg.z()), _ -> Region.create());
 
             region.colliders.add(collider);
         }
@@ -36,7 +36,7 @@ public class ChunkedCollisionDetector implements CollisionDetector {
         if (collider == null) return;
 
         for (Vec2i reg : iterateRegions(collider)) {
-            var region = regions.computeIfAbsent(hashRegion(reg.x(), reg.z()), l -> Region.create());
+            var region = regions.computeIfAbsent(hashRegion(reg.x(), reg.z()), _ -> Region.create());
 
             region.colliders.remove(collider);
         }
@@ -82,7 +82,7 @@ public class ChunkedCollisionDetector implements CollisionDetector {
     }
 
     private static long hashRegion(int rx, int rz) {
-        return ChunkPos.asLong(rx, rz);
+        return ChunkPos.pack(rx, rz);
     }
 
     public static Iterable<Vec2i> iterateRegions(Collider collider) {

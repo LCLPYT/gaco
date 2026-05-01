@@ -54,7 +54,7 @@ public class DynamicEntityManager {
 
         scheduler.interval(() -> tick(invalid), 1);
 
-        hooks.registerHook(LanguageChangedCallback.HOOK, (player, lang, reason) -> update(player));
+        hooks.registerHook(LanguageChangedCallback.HOOK, (player, _, _) -> update(player));
     }
 
     public synchronized void add(DynamicEntity entity) {
@@ -135,7 +135,7 @@ public class DynamicEntityManager {
 
     // see ServerChunkLoadingManager
     private boolean isChunkTrackedBy(ServerPlayer player, int chunkX, int chunkZ) {
-        return player.getChunkTrackingView().contains(chunkX, chunkZ) && !player.connection.chunkSender.isPending(ChunkPos.asLong(chunkX, chunkZ));
+        return player.getChunkTrackingView().contains(chunkX, chunkZ) && !player.connection.chunkSender.isPending(ChunkPos.pack(chunkX, chunkZ));
     }
 
     /** A per-player tracking handler for a DynamicEntity instance */

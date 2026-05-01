@@ -38,7 +38,7 @@ public class TranslatedTextDisplay implements DynamicEntity {
 
     @Override
     public Entity getEntity(ServerPlayer player) {
-        return controller.ref(translations.getLanguage(player), display -> {});
+        return controller.ref(translations.getLanguage(player), _ -> {});
     }
 
     @Override
@@ -103,7 +103,7 @@ public class TranslatedTextDisplay implements DynamicEntity {
         @Getter private byte textOpacity = (byte) -1;
         @Getter private int background = 0;
         @Getter private byte displayFlags = (byte) 0;
-        @Getter private Transformation transformation = Transformation.identity();
+        @Getter private Transformation transformation = Transformation.IDENTITY;
         @Getter private int interpolationDuration = 0;
         @Getter private int teleportDuration = 0;
         @Getter private int startInterpolation = 0;
