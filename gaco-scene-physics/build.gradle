@@ -7,7 +7,7 @@ ext {
 }
 
 dependencies {
-    modImplementation("work.lclpnet.mods.kibu:kibu-physics:$project.kibu_physics_version")
+    implementation("work.lclpnet.mods.kibu:kibu-physics:$project.kibu_physics_version")
 }
 
 publishing {

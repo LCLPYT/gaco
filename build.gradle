@@ -1,18 +1,20 @@
+import groovy.xml.XmlSlurper
 import work.lclpnet.build.task.GithubDeploymentTask
+import org.apache.tools.ant.filters.ReplaceTokens
 
 import java.util.stream.Collectors
 
 plugins {
-	id 'net.fabricmc.fabric-loom-remap' version "${loom_version}" apply false
-	id 'gradle-build-utils' version '1.7.0'
-    id "io.freefair.lombok" version "8.11"
+    alias(libs.plugins.fabric.loom) apply false
+    alias(libs.plugins.gradle.build.utils)
+    alias(libs.plugins.lombok)
 }
 
 static def substitutions(Project project) {
     return [
             version          : project.version,
-            loader_version   : project.loader_version,
-            java_version     : project.java_version,
+            loader_version   : project.libs.versions.fabric.loader.get(),
+            java_version     : project.libs.versions.java.get(),
             minecraft_compat : project.minecraft_compat,
     ]
 }
@@ -23,7 +25,10 @@ Properties props = buildUtils.loadProperties('publish.properties')  // will be e
 boolean local = System.getProperty("build.local") == "true"
 def versionSuffix = (local ? '+local' : '')
 
-version = "${project.mod_version}+${project.minecraft_version}${versionSuffix}"
+def modId = project.mod_id
+def javaVersion = libs.versions.java.get().toInteger()
+
+version = "${project.mod_version}+${libs.versions.minecraft.get()}${versionSuffix}"
 
 ext {
     projectKibuModules = new LinkedHashMap<String, List<String>>()
@@ -33,10 +38,10 @@ ext {
 allprojects {
     group = project.maven_group
 
-    apply plugin: 'java'
-    apply plugin: 'maven-publish'
-    apply plugin: 'net.fabricmc.fabric-loom-remap'
-    apply plugin: 'io.freefair.lombok'
+    apply plugin: libs.plugins.java.get().pluginId
+    apply plugin: libs.plugins.maven.publish.get().pluginId
+    apply plugin: libs.plugins.fabric.loom.get().pluginId
+    apply plugin: libs.plugins.lombok.get().pluginId
 
     repositories {
         maven {
@@ -57,19 +62,17 @@ allprojects {
     }
 
     dependencies {
-        minecraft "com.mojang:minecraft:${project.minecraft_version}"
-        mappings loom.officialMojangMappings()
-        modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+        minecraft(libs.minecraft)
+        implementation(libs.fabric.loader)
+        implementation(libs.fabric.api)
 
-        modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
-
-        compileOnly 'org.jetbrains:annotations:24.1.0'
+        compileOnly('org.jetbrains:annotations:24.1.0')
 
         testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.1")
         testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.8.1")
         testImplementation("org.mockito:mockito-core:5.6.0")
         testImplementation("org.junit.jupiter:junit-jupiter-params:5.8.1")
-        testImplementation("net.fabricmc:fabric-loader-junit:${project.loader_version}")
+        testImplementation("net.fabricmc:fabric-loader-junit:${libs.versions.fabric.loader.get()}")
     }
 
     test {
@@ -81,12 +84,12 @@ allprojects {
         // Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
         withSourcesJar()
 
-        sourceCompatibility = JavaVersion.toVersion(project.java_version)
-        targetCompatibility = JavaVersion.toVersion(project.java_version)
+        sourceCompatibility = JavaVersion.toVersion(javaVersion)
+        targetCompatibility = JavaVersion.toVersion(javaVersion)
     }
 
     tasks.withType(JavaCompile).configureEach {
-        it.options.release.set(Integer.valueOf(project.java_version as String) as int)
+        it.options.release.set(javaVersion)
     }
 
     [jar, sourcesJar].each {
@@ -186,7 +189,7 @@ subprojects {
 }
 
 base {
-    archivesName = project.archives_base_name
+    archivesName = project.mod_id
 }
 
 sourceSets {
@@ -208,12 +211,12 @@ for (final def module in kibuModules) {
     }
 
     project.dependencies {
-        modImplementation("work.lclpnet.mods.kibu:$module:$version")
+        implementation("work.lclpnet.mods.kibu:$module:$version")
     }
 }
 
 dependencies {
-    modImplementation("work.lclpnet.mods.kibu:kibu-physics:$project.kibu_physics_version")
+    implementation("work.lclpnet.mods.kibu:kibu-physics:$project.kibu_physics_version")
 }
 
 loom {
@@ -222,8 +225,8 @@ loom {
     runs {
         remove client
 
-        named('server') {
-            source 'testmod'
+        named("server") {
+            source "testmod"
         }
     }
 }
@@ -231,25 +234,34 @@ loom {
 configureSubstitutions(processResources, substitutions(project))
 configureSubstitutions(processTestmodResources, substitutions(project))
 
+// main jar must be built after all the subprojects
+subprojects.each {
+    jar.dependsOn("${it.path}:jar")
+}
+
 dependencies {
-    afterEvaluate {
-        subprojects.each {
-            api project(path: it.path, configuration: "namedElements")
-        }
+    subprojects.each {
+        api it
     }
 }
 
 // add subprojects as nested jar to the main jar
-remapJar {
-    afterEvaluate {
-        subprojects.each {
-            nestedJars.from project(it.path).tasks.named("remapJar")
-        }
+configurations {
+    nestedJars {
+        transitive = false
     }
 }
 
+dependencies {
+    subprojects.each {
+        nestedJars project("${it.path}")
+    }
+}
+
+loom.nestJars(tasks.named("jar"), configurations.nestedJars)
+
 tasks.register("github", GithubDeploymentTask) {
-    dependsOn tasks.remapJar
+    dependsOn tasks.jar
 
     config {
         token = env.get("GITHUB_TOKEN")
@@ -257,11 +269,11 @@ tasks.register("github", GithubDeploymentTask) {
     }
 
     release {
-        title = "[$project.minecraft_version] $project.name $project.version"
+        title = "[${libs.versions.minecraft.get()}] $project.name $project.version"
         tag = project.version
     }
 
-    assets.add(tasks.remapJar.archiveFile.get())
+    assets.add(tasks.jar.archiveFile.get())
 }
 
 // configure the maven publication
@@ -285,12 +297,10 @@ publishing {
  \************************************/
 
 static def configureSubstitutions(ProcessResources task, Map<String, ?> substitutions) {
-    for (def entry in substitutions.entrySet()) {
-        task.inputs.property(entry.key, entry.value)
-    }
+    task.inputs.properties(substitutions)
 
     task.filesMatching("fabric.mod.json") {
-        expand substitutions
+        expand(substitutions)
     }
 }
 
@@ -299,12 +309,12 @@ def checkProjectIsDeployed(Project project, Properties props) {
 
     String xml
     try {
-        xml = new URL(url).text
+        xml = URI.create(url).toURL()
     } catch (Throwable ignored) {
         return false
     }
 
-    def meta = new groovy.xml.XmlSlurper().parseText(xml)
+    def meta = new XmlSlurper().parseText(xml)
     def versions = meta.versioning.versions.version*.text()
 
     return versions.contains(project.version)
@@ -335,11 +345,13 @@ static def getSubprojectVersion(Project project) {
     def versionString = version.toString()
     def snapshotSuffix = "-SNAPSHOT"
 
+    def mcVersion = project.libs.versions.minecraft.get()
+
     if (versionString.endsWith(snapshotSuffix)) {
-        return versionString.substring(0, versionString.length() - snapshotSuffix.length()) + "+" + project.minecraft_version + suffix + snapshotSuffix
+        return versionString.substring(0, versionString.length() - snapshotSuffix.length()) + "+" + mcVersion + suffix + snapshotSuffix
     }
 
-    return versionString + "+" + project.minecraft_version + suffix
+    return versionString + "+" + mcVersion + suffix
 }
 
 def useKibuModules(Project project, Iterable<String> modules) {
@@ -351,7 +363,7 @@ def useKibuModules(Project project, Iterable<String> modules) {
         }
 
         project.dependencies {
-            modImplementation("work.lclpnet.mods.kibu:$module:$version")
+            implementation("work.lclpnet.mods.kibu:$module:$version")
         }
     }
 }
@@ -359,7 +371,7 @@ def useKibuModules(Project project, Iterable<String> modules) {
 def useGacoModules(Project project, Iterable<String> modules) {
     for (final def module in modules) {
         project.dependencies {
-            api project.dependencies.project(path: ":$module", configuration: 'namedElements')
+            api project.dependencies.project(path: ":$module")
         }
     }
 }
