@@ -1,7 +1,7 @@
 package work.lclpnet.gaco.scene.object;
 
 import lombok.Getter;
-import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.Display;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
@@ -21,7 +21,7 @@ public class ItemDisplayObject extends DisplayEntityObject<Display.ItemDisplay> 
 
     @Override
     protected Display.ItemDisplay createDisplayEntity(MountContext ctx) {
-        return new Display.ItemDisplay(EntityType.ITEM_DISPLAY, ctx.world());
+        return new Display.ItemDisplay(EntityTypes.ITEM_DISPLAY, ctx.world());
     }
 
     @Override

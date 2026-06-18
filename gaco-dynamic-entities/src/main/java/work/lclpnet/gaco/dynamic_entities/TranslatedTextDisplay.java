@@ -3,7 +3,7 @@ package work.lclpnet.gaco.dynamic_entities;
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.util.Brightness;
 import net.minecraft.world.entity.Display;
 import net.minecraft.server.level.ServerPlayer;
@@ -122,7 +122,7 @@ public class TranslatedTextDisplay implements DynamicEntity {
 
         public Display.TextDisplay ref(String language, Consumer<Display.TextDisplay> init) {
             return entities.reference(language, lang -> {
-                var textDisplay = new Display.TextDisplay(EntityType.TEXT_DISPLAY, world);
+                var textDisplay = new Display.TextDisplay(EntityTypes.TEXT_DISPLAY, world);
                 textDisplay.setPos(position);
 
                 textDisplay.setText(text.translateTo(lang));

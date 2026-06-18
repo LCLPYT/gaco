@@ -1,8 +1,8 @@
 [versions]
-minecraft = "26.1.2"
-fabric-api = "0.147.0+26.1.2"
-fabric-loader = "0.19.2"
-fabric-loom = "1.16-SNAPSHOT"
+minecraft = "26.2"
+fabric-api = "0.152.2+26.2"
+fabric-loader = "0.19.3"
+fabric-loom = "1.17-SNAPSHOT"
 gradle-build-tools = "1.7.0"
 java = "25"
 lombok = "9.4.0"
@@ -11,7 +11,7 @@ jetbrains-annotations = "24.1.0"
 mockito = "5.23.0"
 sqlite-jdbc = "3.49.1.0+2025-07-12"
 ejml = "0.44.0"
-kibu-physics = "0.2.0+26.1.2"
+kibu-physics = "0.2.0+26.2"
 
 [plugins]
 fabric-loom = { id = "net.fabricmc.fabric-loom", version.ref = "fabric-loom" }

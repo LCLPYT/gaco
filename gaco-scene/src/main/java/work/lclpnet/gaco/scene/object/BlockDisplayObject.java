@@ -2,7 +2,7 @@ package work.lclpnet.gaco.scene.object;
 
 import lombok.Getter;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.Display;
 import work.lclpnet.gaco.scene.MountContext;
 import work.lclpnet.gaco.scene.Scene;
@@ -19,7 +19,7 @@ public class BlockDisplayObject extends DisplayEntityObject<Display.BlockDisplay
 
     @Override
     protected Display.BlockDisplay createDisplayEntity(MountContext ctx) {
-        return new Display.BlockDisplay(EntityType.BLOCK_DISPLAY, ctx.world());
+        return new Display.BlockDisplay(EntityTypes.BLOCK_DISPLAY, ctx.world());
     }
 
     @Override

@@ -1,7 +1,7 @@
 package work.lclpnet.gaco.scene.object;
 
 import lombok.Getter;
-import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.Display;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.Nullable;
@@ -21,7 +21,7 @@ public class TextDisplayObject extends DisplayEntityObject<Display.TextDisplay> 
 
     @Override
     protected @Nullable Display.TextDisplay createDisplayEntity(MountContext ctx) {
-        return new Display.TextDisplay(EntityType.TEXT_DISPLAY, ctx.world());
+        return new Display.TextDisplay(EntityTypes.TEXT_DISPLAY, ctx.world());
     }
 
     @Override
