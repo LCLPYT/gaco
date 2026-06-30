@@ -58,6 +58,32 @@ class UriAssetRepositoryTest {
     }
 
     @Test
+    void getUrisReturnsEmptyForMissingLocalFile() throws IOException {
+        Path dir = Files.createTempDirectory("mgl_uar");
+        UriAssetRepository repo = new UriAssetRepository(dir.toUri(), logger);
+
+        Iterable<AssetUriResource> uris = repo.getUris(AssetPath.of("missing.txt"), AssetRequestOptions.DEFAULT);
+
+        assertFalse(uris.iterator().hasNext());
+    }
+
+    @Test
+    void getUrisReturnsUriForExistingLocalFile() throws IOException {
+        Path dir = Files.createTempDirectory("mgl_uar");
+        Path file = dir.resolve("file.txt");
+        Files.writeString(file, "data", UTF_8);
+
+        UriAssetRepository repo = new UriAssetRepository(dir.toUri(), logger);
+
+        Iterable<AssetUriResource> uris = repo.getUris(AssetPath.of("file.txt"), AssetRequestOptions.DEFAULT);
+
+        var it = uris.iterator();
+        assertTrue(it.hasNext());
+        assertEquals(file.toUri(), it.next().resource());
+        assertFalse(it.hasNext());
+    }
+
+    @Test
     void toStringContainsRoot() {
         URI root = URI.create("https://example.com/");
         UriAssetRepository repo = new UriAssetRepository(root, logger);

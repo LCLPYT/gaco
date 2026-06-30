@@ -9,6 +9,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collections;
 
@@ -26,6 +28,12 @@ public class UriAssetRepository implements AssetRepository {
     public Iterable<AssetUriResource> getUris(AssetPath path, AssetRequestOptions options) {
         try {
             URI uri = uri(path);
+
+            if (!exists(uri)) {
+                logger.debug("Local asset '{}' does not exist at '{}'", path, uri);
+                return Collections::emptyIterator;
+            }
+
             AssetUriResource res = new AssetUriResource(uri, false);
 
             return () -> Iterators.singletonIterator(res);
@@ -33,6 +41,24 @@ public class UriAssetRepository implements AssetRepository {
             logger.debug("Failed to get uri for asset '{}'", path, e);
             return Collections::emptyIterator;
         }
+    }
+
+    private boolean exists(URI uri) {
+        if (uri.getHost() != null) {
+            // remote uri, existence cannot be checked cheaply
+            return true;
+        }
+
+        Path path;
+
+        try {
+            path = uri.getScheme() != null ? Path.of(uri) : Path.of(uri.getPath());
+        } catch (RuntimeException e) {
+            // not a local file system path, leave it to the consumer
+            return true;
+        }
+
+        return Files.exists(path);
     }
 
     @Override
