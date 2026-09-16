@@ -1,6 +1,7 @@
 package work.lclpnet.gaco.dynamic_entities;
 
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.UpdateInterval;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.server.MinecraftServer;
@@ -291,7 +292,9 @@ public class DynamicEntityManager {
                     }
                 };
 
-                return new ServerEntity(world, e, type.updateInterval(), type.trackDeltas(), sender);
+                UpdateInterval updateInterval = type.hasUpdateInterval() ? UpdateInterval.periodic(type.updateInterval()) : UpdateInterval.NEVER;
+
+                return new ServerEntity(world, e, updateInterval, type.trackDeltas(), sender);
             });
         }
     }
