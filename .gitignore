@@ -35,3 +35,6 @@ bin/
 run/
 logs/
 */.fabric/processedMods
+
+.direnv/
+.envrc
