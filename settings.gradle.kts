@@ -1,0 +1,25 @@
+pluginManagement {
+    repositories {
+        maven {
+            name = "Fabric"
+            url = uri("https://maven.fabricmc.net/")
+        }
+        maven {
+            name = "LCLPNetwork Maven"
+            url = uri("https://repo.lclpnet.work/releases")
+        }
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+
+rootProject.name = "gaco"
+
+include("gaco-dynamic-entities")
+include("gaco-ds")
+include("gaco-collisions")
+include("gaco-math")
+include("gaco-scene")
+include("gaco-core")
+include("gaco-scene-physics")
+include("gaco-asset-repo")

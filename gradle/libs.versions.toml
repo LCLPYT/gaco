@@ -1,37 +1,42 @@
 [versions]
-minecraft = "26.3"
+ejml = "0.44.0"
 fabric-api = "0.160.5+26.3"
+fabric-language-kotlin = "1.14.1+kotlin.2.4.20"
 fabric-loader = "0.19.5"
 fabric-loom = "1.17-SNAPSHOT"
 gradle-build-tools = "1.7.0"
 java = "25"
-lombok = "9.4.0"
-junit = "5.8.1"
 jetbrains-annotations = "24.1.0"
+junit = "5.8.1"
+kibu-physics = "0.2.0+26.3"
+kotlin = "2.4.20"
+lombok = "9.4.0"
+minecraft = "26.3"
 mockito = "5.23.0"
 sqlite-jdbc = "3.49.1.0+2025-07-12"
-ejml = "0.44.0"
-kibu-physics = "0.2.0+26.3"
 
 [plugins]
 fabric-loom = { id = "net.fabricmc.fabric-loom", version.ref = "fabric-loom" }
-maven-publish = { id = "maven-publish" }
-java = { id = "java" }
 gradle-build-utils = { id = "gradle-build-utils", version.ref = "gradle-build-tools" }
+java = { id = "java" }
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 lombok = { id = "io.freefair.lombok", version.ref = "lombok" }
+maven-publish = { id = "maven-publish" }
 
 [libraries]
-minecraft = { module = "com.mojang:minecraft", version.ref = "minecraft" }
+
+ejml-core = { module = "org.ejml:ejml-core", version.ref = "ejml" }
+ejml-ddense = { module = "org.ejml:ejml-ddense", version.ref = "ejml" }
+ejml-simple = { module = "org.ejml:ejml-simple", version.ref = "ejml" }
 fabric-api = { module = "net.fabricmc.fabric-api:fabric-api", version.ref = "fabric-api" }
+fabric-language-kotlin = { module = "net.fabricmc:fabric-language-kotlin", version.ref = "fabric-language-kotlin" }
 fabric-loader = { module = "net.fabricmc:fabric-loader", version.ref = "fabric-loader" }
 fabric-loader-junit = { module = "net.fabricmc:fabric-loader-junit", version.ref = "fabric-loader" }
 jetbrains-annotations = { module = "org.jetbrains:annotations", version.ref = "jetbrains-annotations" }
 junit-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit" }
 junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit" }
 junit-jupiter-params = { module = "org.junit.jupiter:junit-jupiter-params", version.ref = "junit" }
+kibu-physics = { module = "work.lclpnet.mods.kibu:kibu-physics", version.ref = "kibu-physics" }
+minecraft = { module = "com.mojang:minecraft", version.ref = "minecraft" }
 mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockito" }
 sqlite-jdbc = { module = "maven.modrinth:minecraft-sqlite-jdbc", version.ref = "sqlite-jdbc" }
-ejml-core = { module = "org.ejml:ejml-core", version.ref = "ejml" }
-ejml-simple = { module = "org.ejml:ejml-simple", version.ref = "ejml" }
-ejml-ddense = { module = "org.ejml:ejml-ddense", version.ref = "ejml" }
-kibu-physics = { module = "work.lclpnet.mods.kibu:kibu-physics", version.ref = "kibu-physics" }
