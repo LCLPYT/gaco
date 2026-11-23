@@ -5,6 +5,7 @@ import com.charleskorn.kaml.decodeFromStream
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.InputStream
+import java.net.URI
 
 class AssetRepo(
     val transport: RepoTransport,
@@ -21,5 +22,9 @@ class AssetRepo(
 
     suspend fun getFile(path: String): InputStream {
         return transport.getFile(path)
+    }
+
+    suspend fun getUri(path: String): URI {
+        return transport.getUri(path)
     }
 }

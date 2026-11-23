@@ -1,6 +1,7 @@
 package work.lclpnet.gaco.assetv2
 
 import java.io.InputStream
+import java.net.URI
 
 class AssetService(
     val repos: List<AssetRepo>,
@@ -15,6 +16,18 @@ class AssetService(
         val data = resolved.repo.getFile(path)
 
         return AssetFetchResult.Success(data)
+    }
+
+    suspend fun getUri(asset: String, file: String): AssetFetchUriResult {
+        // first resolve an asset version to use
+        val resolved = resolveAsset(asset) ?: return AssetFetchUriResult.AssetNotFound
+
+        // now find file from the resolved asset version
+        val path = "${resolved.path}/@${resolved.version.id}/$file"
+
+        val uri = resolved.repo.getUri(path)
+
+        return AssetFetchUriResult.Success(uri)
     }
 
     private suspend fun resolveAsset(path: String): ResolvedAsset? {
@@ -73,4 +86,9 @@ private fun detectVersioningScheme(asset: Asset): VersioningScheme<out Any>? {
 sealed interface AssetFetchResult {
     data class Success(val data: InputStream) : AssetFetchResult
     object AssetNotFound : AssetFetchResult
+}
+
+sealed interface AssetFetchUriResult {
+    data class Success(val uri: URI) : AssetFetchUriResult
+    object AssetNotFound : AssetFetchUriResult
 }
