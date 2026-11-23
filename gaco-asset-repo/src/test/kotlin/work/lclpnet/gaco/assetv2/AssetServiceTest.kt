@@ -3,15 +3,18 @@ package work.lclpnet.gaco.assetv2
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
+import net.minecraft.world.item.Item
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.fail
+import work.lclpnet.gaco.assetv2.resolved.ResolvedListing
+import work.lclpnet.gaco.assetv2.resolved.ResolvedListingItem
 import java.nio.file.Path
 import kotlin.io.path.absolute
 
 class AssetServiceTest {
 
-    val minimalRoot = Path.of("src/test/resources/assets/minimal")
+    val minimalRoot: Path = Path.of("src/test/resources/assets/minimal")
 
     @Test
     fun minimal_arena_getFile() = runTest {
@@ -53,5 +56,15 @@ class AssetServiceTest {
         val expected = "file://${minimalRoot.absolute()}/maps/spleef/arena/@2/map.txt"
 
         assertEquals(expected, res.uri.toString())
+    }
+
+    @Test
+    fun minimal_spleef_getListing() = runTest {
+        val transport = PathRepoTransport(minimalRoot)
+        val repo = AssetRepo(transport)
+        val service = AssetService(repos = listOf(repo))
+
+        val res = service.getListing("maps/spleef")
+
     }
 }

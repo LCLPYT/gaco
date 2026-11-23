@@ -4,6 +4,7 @@ import com.charleskorn.kaml.Yaml
 import com.charleskorn.kaml.decodeFromStream
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import work.lclpnet.gaco.assetv2.model.Asset
 import java.io.InputStream
 import java.net.URI
 

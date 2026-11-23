@@ -67,7 +67,9 @@ Version resolution is dynamic and always done by the consumer, since whether the
 ### Minimal asset.yml
 ```yml
 # maps/spleef/asset.yml
-versions: [1, 2]
+versions: 
+  - id: 1
+  - id: 2
 ```
 This registers versions 1 and 2 of asset `maps/spleef`.
 Versions can be semver strings or integers.
@@ -96,7 +98,7 @@ Listing assets require `index.yml`:
 
 ```yml
 # maps/spleef/@2/index.yml
-maps:
+items:
   - asset: maps/spleef/arena
   - asset: maps/spleef/snow_valley
 ```
@@ -108,7 +110,7 @@ For example, games could read a custom name property for maps, in order to displ
 
 ```yml
 # maps/spleef/@2/index.yml
-maps:
+items:
   - asset: maps/spleef/arena
     properties:
       icon: minecraft:spruce_planks

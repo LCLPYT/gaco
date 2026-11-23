@@ -1,1 +1,3 @@
-versions: [1, 2]
+versions:
+  - id: 1
+  - id: 2
