@@ -1,5 +1,6 @@
 plugins {
     alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 extra["kibuModules"] = listOf(
@@ -10,6 +11,8 @@ extra["gacoModules"] = listOf<String>()
 
 dependencies {
     implementation(libs.sqlite.jdbc)
+    implementation(libs.kotlinx.coroutines.test)
+    implementation(libs.kotaml.core)
 }
 
 publishing {

@@ -127,3 +127,14 @@ maps:
         en: Snow Valley
         de: Schneetal
 ```
+
+## Caching
+Assets may be cached locally. 
+This is useful to prevent re-fetches from remote repos.
+
+Individual artifact versions are quasi immutable, so the actual files belonging to an asset version can be cached indefinitely.
+
+The artifact version list files `asset.yml` are mutable, so they should be cached for short durations, e.g. TTL of 1h.
+
+Repositories accessed via HTTP can optionally add Cache-Control HTTP headers in order to control the TTL and caching strategy.
+Clients are free to utilize or ignore these headers.
