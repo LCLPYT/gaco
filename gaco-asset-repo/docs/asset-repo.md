@@ -76,17 +76,17 @@ Versions can be semver strings or integers.
 
 ### Version constraints in asset.yml
 Most of the time, you'll probably want to impose restrictions on asset versions.
-Instead of referring to a version with just its id, you can also provide an object with additional properties:
+Besides its `id`, each version entry can define additional properties, such as `depends`:
 
 ```yml
 # maps/spleef/asset.yml
 versions:
   - id: 1
     depends:
-      minecraft: >=26.1
+      minecraft: ">=26.1"
   - id: 2
     depends:
-      minecraft: >=26.3
+      minecraft: ">=26.3"
 ```
 
 If the consumer is on Minecraft 26.1 or 26.2, requesting asset `maps/spleef` will return version 1.
@@ -114,7 +114,7 @@ items:
   - asset: maps/spleef/arena
     properties:
       icon: minecraft:spruce_planks
-      authors: [@person.lclp]
+      authors: ["@person.lclp"]
       name:
         en: Arena
         de: Spleef-Arena
@@ -123,8 +123,8 @@ items:
     properties:
       icon: minecraft:snow_block
       authors: 
-        - @person.bops
-        - @person.lclp
+        - "@person.bops"
+        - "@person.lclp"
       name:
         en: Snow Valley
         de: Schneetal

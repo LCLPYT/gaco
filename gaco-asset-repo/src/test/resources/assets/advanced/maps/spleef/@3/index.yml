@@ -1,0 +1,17 @@
+items:
+  - asset: maps/spleef/arena
+    properties:
+      icon: minecraft:spruce_planks
+      authors: ["@person.lclp"]
+      name:
+        en: Arena
+        de: Spleef-Arena
+  - asset: maps/spleef/snow_valley
+    properties:
+      icon: minecraft:snow_block
+      authors:
+        - "@person.bops"
+        - "@person.lclp"
+      name:
+        en: Snow Valley
+        de: Schneetal

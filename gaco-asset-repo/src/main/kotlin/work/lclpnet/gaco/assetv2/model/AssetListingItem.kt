@@ -6,6 +6,6 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class AssetListingItem(
     val asset: String,
-    val properties: Map<String, YamlNode> = mapOf(),  // TODO try to convert this into yaml-agnostic types
+    val properties: Map<String, YamlNode> = mapOf(),
 ) {
 }

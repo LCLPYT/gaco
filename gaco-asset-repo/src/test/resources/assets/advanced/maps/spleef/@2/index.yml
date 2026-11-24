@@ -1,0 +1,10 @@
+items:
+  - asset: maps/spleef/arena
+    properties:
+      icon: minecraft:spruce_planks
+      authors: ["@person.lclp"]
+      name:
+        en: Arena
+        de: Spleef-Arena
+  - asset: maps/spleef/snow_valley
+# v2: simulate someone forgot to add the properties. They are added in v3

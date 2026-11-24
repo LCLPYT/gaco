@@ -7,6 +7,7 @@ import org.slf4j.Logger
 import work.lclpnet.gaco.assetv2.model.Asset
 import work.lclpnet.gaco.assetv2.model.AssetListing
 import work.lclpnet.gaco.assetv2.model.AssetVersion
+import work.lclpnet.gaco.assetv2.model.toListingItem
 import work.lclpnet.gaco.assetv2.resolved.ResolvedAsset
 import work.lclpnet.gaco.assetv2.resolved.ResolvedListing
 import work.lclpnet.gaco.assetv2.resolved.ResolvedListingItem
@@ -27,12 +28,20 @@ class AssetService(
     suspend fun get(asset: String, file: String): AssetFetchResult {
         logger.debug("AssetService::get {} {}", asset, file)
 
-        val resolved = resolveAsset(asset) ?: return AssetFetchResult.AssetNotFound
+        val resolved = when (val res = resolveAsset(asset)) {
+            is AssetResolveResult.Success -> res.resolved
+            is AssetResolveResult.AssetNotFound -> return AssetFetchResult.AssetNotFound
+            is AssetResolveResult.NoCompatibleVersionFound -> return AssetFetchResult.NoCompatibleVersionFound
+        }
 
         logger.debug("AssetService::get resolved asset {}", resolved)
 
         val path = resolved.filePath(file)
-        val data = resolved.repo.getFile(path)
+
+        val data = resolved.repo.getFile(path) ?: run {
+            logger.debug("AssetService::get file {} not found for asset {}", file, resolved)
+            return AssetFetchResult.FileNotFound
+        }
 
         logger.debug("AssetService::get successfully fetched {}", path)
 
@@ -49,7 +58,11 @@ class AssetService(
     suspend fun getUri(asset: String, file: String): AssetFetchUriResult {
         logger.debug("AssetService::getUri {} {}", asset, file)
 
-        val resolved = resolveAsset(asset) ?: return AssetFetchUriResult.AssetNotFound
+        val resolved = when (val res = resolveAsset(asset)) {
+            is AssetResolveResult.Success -> res.resolved
+            is AssetResolveResult.AssetNotFound -> return AssetFetchUriResult.AssetNotFound
+            is AssetResolveResult.NoCompatibleVersionFound -> return AssetFetchUriResult.NoCompatibleVersionFound
+        }
 
         logger.debug("AssetService::getUri resolved asset {}", resolved)
 
@@ -71,9 +84,12 @@ class AssetService(
         val repoListings = coroutineScope {
             repos.map { repo ->
                 async {
-                    val asset = repo.getAsset(assetPath)
+                    val asset = repo.getAsset(assetPath) ?: run {
+                        logger.debug("AssetService::getListing didn't find asset {} in repo {}", assetPath, repo)
+                        return@async null
+                    }
 
-                    logger.debug("AssetService::getListing found asset {} in repo {}", asset, repo)
+                    logger.debug("AssetService::getListing found asset {} in repo {}", assetPath, repo)
 
                     val version = pickAssetVersion(asset, assetPath) ?: run {
                         logger.debug("AssetService::getListing no compatible versions found for asset {} in repo {}", asset, repo)
@@ -89,8 +105,12 @@ class AssetService(
                     )
 
                     val listing = withContext(Dispatchers.IO) {
-                        val source = repo.getFile(path)
-                        Yaml.default.decodeFromStream<AssetListing>(source)
+                        repo.getFile(path)?.let {
+                            Yaml.default.decodeFromStream<AssetListing>(it)
+                        }
+                    } ?: run {
+                        logger.debug("AssetService::getListing listing file {} not found in repo {}", path, repo)
+                        return@async null
                     }
 
                     logger.debug("AssetService::getListing fetched listing {} from repo {}: {}", assetPath, repo, listing)
@@ -103,7 +123,7 @@ class AssetService(
         val resolved = repoListings.flatMap { repoListing ->
             repoListing.listing.items.map {
                 ResolvedListingItem(
-                    item = it,
+                    item = it.toListingItem(),
                     repo = repoListing.repo,
                 )
             }
@@ -118,23 +138,41 @@ class AssetService(
         return ResolvedListing(deduped)
     }
 
-    private suspend fun resolveAsset(path: String): ResolvedAsset? {
+    private suspend fun resolveAsset(path: String): AssetResolveResult {
         logger.debug("AssetService::resolveAsset {}", path)
 
-        return repos.mapNotNull { repo ->
-            val asset = repo.getAsset(path)
+        var resolved: ResolvedAsset? = null
+        var assetsFound = false
 
-            logger.debug("AssetService::resolveAsset found asset {} in repo {}", asset, repo)
+        for (repo in repos) {
+            val asset = repo.getAsset(path) ?: run {
+                logger.debug("AssetService::resolveAsset didn't find asset {} in repo {}", path, repo)
+                continue
+            }
 
-            val version = pickAssetVersion(asset, path)
-                ?: return@mapNotNull null  // no compatible asset version
+            logger.debug("AssetService::resolveAsset found asset {} in repo {}", path, repo)
 
-            ResolvedAsset(
+            assetsFound = true
+
+            val version = pickAssetVersion(asset, path) ?: run {
+                logger.debug("AssetService::resolveAsset no compatible versions found for asset {} in repo {}", asset, repo)
+                continue
+            }
+
+            resolved = ResolvedAsset(
                 path = path,
                 version = version,
                 repo = repo,
             )
-        }.firstOrNull()
+
+            break
+        }
+
+        return when {
+            resolved != null -> AssetResolveResult.Success(resolved)
+            assetsFound -> AssetResolveResult.NoCompatibleVersionFound
+            else -> AssetResolveResult.AssetNotFound
+        }
     }
     
     private fun pickAssetVersion(asset: Asset, assetPath: String): AssetVersion? {
@@ -187,9 +225,18 @@ private fun detectVersioningScheme(asset: Asset): VersioningScheme<out Any>? {
 sealed interface AssetFetchResult {
     data class Success(val data: InputStream) : AssetFetchResult
     object AssetNotFound : AssetFetchResult
+    object NoCompatibleVersionFound : AssetFetchResult
+    object FileNotFound : AssetFetchResult
 }
 
 sealed interface AssetFetchUriResult {
     data class Success(val uri: URI) : AssetFetchUriResult
     object AssetNotFound : AssetFetchUriResult
+    object NoCompatibleVersionFound : AssetFetchUriResult
+}
+
+private sealed interface AssetResolveResult {
+    data class Success(val resolved: ResolvedAsset) : AssetResolveResult
+    object AssetNotFound : AssetResolveResult
+    object NoCompatibleVersionFound : AssetResolveResult
 }

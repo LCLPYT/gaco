@@ -1,0 +1,5 @@
+# Version 2 is declared here, but its files (@2/) are missing in this repo.
+# The minimal repo does have tower/@2/map.txt, but it must NOT be used as a fallback,
+# as files of an asset version may only be resolved in the repo that declares the version.
+versions:
+  - id: 2

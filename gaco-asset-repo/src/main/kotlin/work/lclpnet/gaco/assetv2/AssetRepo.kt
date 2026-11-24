@@ -14,19 +14,19 @@ class AssetRepo(
     val logger: Logger,
 ) {
 
-    suspend fun getAsset(path: String): Asset {
+    suspend fun getAsset(path: String): Asset? {
         val path = path.removeSuffix("/")
 
         logger.debug("{}::getAsset {}", this, path)
 
         return withContext(Dispatchers.IO) {
-            val stream = transport.getFile("$path/asset.yml")
-
-            Yaml.default.decodeFromStream<Asset>(stream)
+            transport.getFile("$path/asset.yml")?.let {
+                Yaml.default.decodeFromStream<Asset>(it)
+            }
         }
     }
 
-    suspend fun getFile(path: String): InputStream {
+    suspend fun getFile(path: String): InputStream? {
         logger.debug("{}::getFile {}", this, path)
 
         return transport.getFile(path)

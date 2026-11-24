@@ -1,0 +1,5 @@
+versions:
+  - id: 2
+  - id: 3
+    depends:
+      minecraft: ">=26.3"

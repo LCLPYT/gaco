@@ -1,0 +1,9 @@
+# "cave" is intentionally only listed in the minimal repo
+items:
+  - asset: maps/parkour/tower
+    properties:
+      icon: minecraft:stone_bricks
+      name:
+        en: Tower
+        de: Turm
+  - asset: maps/parkour/jungle

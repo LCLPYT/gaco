@@ -1,0 +1,7 @@
+versions:
+  - id: 1
+    depends:
+      minecraft: "<=26.1"
+  - id: 2
+    depends:
+      minecraft: ">=26.3"
