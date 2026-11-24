@@ -3,6 +3,7 @@ package work.lclpnet.gaco.assetv2
 import com.charleskorn.kaml.Yaml
 import com.charleskorn.kaml.decodeFromStream
 import kotlinx.coroutines.*
+import org.slf4j.Logger
 import work.lclpnet.gaco.assetv2.model.Asset
 import work.lclpnet.gaco.assetv2.model.AssetListing
 import work.lclpnet.gaco.assetv2.model.AssetVersion
@@ -14,6 +15,7 @@ import java.net.URI
 
 class AssetService(
     val repos: List<AssetRepo>,
+    val logger: Logger,
 ) {
 
     /**
@@ -23,9 +25,16 @@ class AssetService(
      * @return An input stream with the assets file content or an error result if no asset could be found.
      */
     suspend fun get(asset: String, file: String): AssetFetchResult {
+        logger.debug("AssetService::get {} {}", asset, file)
+
         val resolved = resolveAsset(asset) ?: return AssetFetchResult.AssetNotFound
 
-        val data = resolved.repo.getFile(resolved.filePath(file))
+        logger.debug("AssetService::get resolved asset {}", resolved)
+
+        val path = resolved.filePath(file)
+        val data = resolved.repo.getFile(path)
+
+        logger.debug("AssetService::get successfully fetched {}", path)
 
         return AssetFetchResult.Success(data)
     }
@@ -38,26 +47,40 @@ class AssetService(
      * @return A URI pointing to the asset file content or an error result if no asset could be found.
      */
     suspend fun getUri(asset: String, file: String): AssetFetchUriResult {
+        logger.debug("AssetService::getUri {} {}", asset, file)
+
         val resolved = resolveAsset(asset) ?: return AssetFetchUriResult.AssetNotFound
 
+        logger.debug("AssetService::getUri resolved asset {}", resolved)
+
         val uri = resolved.repo.getUri(resolved.filePath(file))
+
+        logger.debug("AssetService::getUri successfully resolved URI {}", uri)
 
         return AssetFetchUriResult.Success(uri)
     }
 
     suspend fun getListing(assetPath: String): ResolvedListing {
+        logger.debug("AssetService::getListing {}", assetPath)
+
         data class RepoListing(
             val listing: AssetListing,
             val repo: AssetRepo,
         )
 
-        val items = coroutineScope {
+        val repoListings = coroutineScope {
             repos.map { repo ->
                 async {
                     val asset = repo.getAsset(assetPath)
 
-                    val version = pickAssetVersion(asset)
-                        ?: return@async null  // no compatible asset version
+                    logger.debug("AssetService::getListing found asset {} in repo {}", asset, repo)
+
+                    val version = pickAssetVersion(asset, assetPath) ?: run {
+                        logger.debug("AssetService::getListing no compatible versions found for asset {} in repo {}", asset, repo)
+                        return@async null
+                    }
+
+                    logger.debug("AssetService::getListing picked {} version {}", asset, version.id)
 
                     val path = ResolvedAsset.buildFilePath(
                         assetPath = assetPath,
@@ -70,30 +93,40 @@ class AssetService(
                         Yaml.default.decodeFromStream<AssetListing>(source)
                     }
 
+                    logger.debug("AssetService::getListing fetched listing {} from repo {}: {}", assetPath, repo, listing)
+
                     RepoListing(listing, repo)
                 }
-            }.awaitAll()
-                .filterNotNull()
-                .flatMap { repoListing ->
-                    repoListing.listing.items.map {
-                        ResolvedListingItem(
-                            item = it,
-                            repo = repoListing.repo,
-                        )
-                    }
-                }
-                .distinctBy { it.item.asset }
-                .toSet()
+            }.awaitAll().filterNotNull()
         }
 
-        return ResolvedListing(items)
+        val resolved = repoListings.flatMap { repoListing ->
+            repoListing.listing.items.map {
+                ResolvedListingItem(
+                    item = it,
+                    repo = repoListing.repo,
+                )
+            }
+        }
+
+        logger.debug("AssetService::getListing resolved listings: {}", resolved)
+
+        val deduped = resolved.distinctBy { it.item.asset }.toSet()
+
+        logger.debug("AssetService::getListing deduped listings: {}", deduped)
+
+        return ResolvedListing(deduped)
     }
 
     private suspend fun resolveAsset(path: String): ResolvedAsset? {
+        logger.debug("AssetService::resolveAsset {}", path)
+
         return repos.mapNotNull { repo ->
             val asset = repo.getAsset(path)
 
-            val version = pickAssetVersion(asset)
+            logger.debug("AssetService::resolveAsset found asset {} in repo {}", asset, repo)
+
+            val version = pickAssetVersion(asset, path)
                 ?: return@mapNotNull null  // no compatible asset version
 
             ResolvedAsset(
@@ -104,20 +137,29 @@ class AssetService(
         }.firstOrNull()
     }
     
-    private fun pickAssetVersion(asset: Asset): AssetVersion? {
+    private fun pickAssetVersion(asset: Asset, assetPath: String): AssetVersion? {
+        logger.debug("AssetService::pickAssetVersion {} {}", assetPath, asset)
+
         if (asset.versions.isEmpty()) {
+            logger.debug("AssetService::pickAssetVersion no versions configured for asset {}", assetPath)
             return null
         }
 
         val versioningScheme = detectVersioningScheme(asset)
             ?: throw IllegalStateException("impossible state")
 
+        logger.debug("AssetService::pickAssetVersion detected versioning scheme {}", versioningScheme)
+
         val versionComparator = Comparator<AssetVersion> { x, y ->
             versioningScheme.compareRaw(y.id, x.id)  // descending
         }
 
         return asset.versions
-            .filter { assetConstraintsMatch(it) }
+            .filter { version ->
+                assetConstraintsMatch(version).also { match ->
+                    logger.debug("AssetService::pickAssetVersion constraints ${if (match) "" else "don't "}match for asset {} version {}", assetPath, version)
+                }
+            }
             .sortedWith(versionComparator)
             .firstOrNull()
     }

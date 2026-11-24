@@ -3,24 +3,24 @@ package work.lclpnet.gaco.assetv2
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
-import net.minecraft.world.item.Item
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.fail
-import work.lclpnet.gaco.assetv2.resolved.ResolvedListing
-import work.lclpnet.gaco.assetv2.resolved.ResolvedListingItem
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import java.nio.file.Path
 import kotlin.io.path.absolute
 
 class AssetServiceTest {
 
     val minimalRoot: Path = Path.of("src/test/resources/assets/minimal")
+    val logger: Logger = LoggerFactory.getLogger(AssetServiceTest::class.java)
 
     @Test
     fun minimal_arena_getFile() = runTest {
-        val transport = PathRepoTransport(minimalRoot)
-        val repo = AssetRepo(transport)
-        val service = AssetService(repos = listOf(repo))
+        val transport = PathRepoTransport(minimalRoot, logger)
+        val repo = AssetRepo(transport, logger)
+        val service = AssetService(repos = listOf(repo), logger = logger)
 
         val res = service.get(
             asset = "maps/spleef/arena",
@@ -40,9 +40,9 @@ class AssetServiceTest {
 
     @Test
     fun minimal_arena_getUri() = runTest {
-        val transport = PathRepoTransport(minimalRoot)
-        val repo = AssetRepo(transport)
-        val service = AssetService(repos = listOf(repo))
+        val transport = PathRepoTransport(minimalRoot, logger)
+        val repo = AssetRepo(transport, logger)
+        val service = AssetService(repos = listOf(repo), logger = logger)
 
         val res = service.getUri(
             asset = "maps/spleef/arena",
@@ -60,9 +60,9 @@ class AssetServiceTest {
 
     @Test
     fun minimal_spleef_getListing() = runTest {
-        val transport = PathRepoTransport(minimalRoot)
-        val repo = AssetRepo(transport)
-        val service = AssetService(repos = listOf(repo))
+        val transport = PathRepoTransport(minimalRoot, logger)
+        val repo = AssetRepo(transport, logger)
+        val service = AssetService(repos = listOf(repo), logger = logger)
 
         val res = service.getListing("maps/spleef")
 
